@@ -244,6 +244,7 @@ fn test_get_body_json_invalid() {
     );
 
     #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
     struct User {
         name: String,
         email: String,
@@ -436,6 +437,7 @@ fn test_get_state_not_found() {
     );
 
     #[derive(Clone)]
+    #[allow(dead_code)]
     struct AppState {
         value: i32,
     }

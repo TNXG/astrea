@@ -193,6 +193,7 @@ fn test_event_parse_json_invalid() {
     );
 
     #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
     struct TestData {
         name: String,
     }
@@ -285,6 +286,7 @@ fn test_event_parse_form_invalid() {
     );
 
     #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
     struct FormData {
         required_field: String,
     }
@@ -335,6 +337,7 @@ fn test_event_state_none() {
     );
 
     #[derive(Clone)]
+    #[allow(dead_code)]
     struct AppState {
         value: i32,
     }
@@ -346,11 +349,13 @@ fn test_event_state_none() {
 #[test]
 fn test_event_state_wrong_type() {
     #[derive(Clone)]
+    #[allow(dead_code)]
     struct StateA {
         value: i32,
     }
 
     #[derive(Clone)]
+    #[allow(dead_code)]
     struct StateB {
         value: String,
     }

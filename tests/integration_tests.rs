@@ -47,12 +47,13 @@ async fn test_simple_handler_flow() {
 #[tokio::test]
 async fn test_post_handler_with_json_body() {
     #[derive(Deserialize, Serialize)]
+    #[allow(dead_code)]
     struct CreateUserRequest {
         name: String,
         email: String,
     }
 
-    async fn create_user_handler(event: Event) -> Result<Response> {
+    async fn create_user_handler(_event: Event) -> Result<Response> {
         // 在真实场景中，这里会从请求体获取数据
         // 但我们直接构造来测试逻辑
         Ok(json(json!({
@@ -247,6 +248,7 @@ async fn test_handler_error_propagation() {
 #[tokio::test]
 async fn test_handler_with_validation_errors() {
     #[derive(Deserialize)]
+    #[allow(dead_code)]
     struct LoginRequest {
         username: String,
         password: String,
