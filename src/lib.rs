@@ -37,10 +37,10 @@ pub mod router;
 pub use axum;
 /// Re-export bytes
 pub use bytes;
-/// Re-export serde_json
-pub use serde_json;
 /// Re-export serde
 pub use serde;
+/// Re-export `serde_json`
+pub use serde_json;
 /// Re-export tokio
 pub use tokio;
 /// Re-export tracing
@@ -59,16 +59,16 @@ pub use astrea_macro::generate_routes;
 
 pub mod prelude {
     //! 便捷导入的预导出模块
-    pub use crate::error::{RouteError, Result};
+    pub use crate::error::{Result, RouteError};
     pub use crate::event::Event;
     pub use crate::extract::*;
-    pub use crate::response::{json, text, html, redirect, no_content, Response};
+    pub use crate::response::{html, json, no_content, redirect, text, Response};
 
     // Re-export 常用 axum 类型
     pub use axum::http::StatusCode;
 
     // Re-export serde 常用 derive 宏和 json! 宏
-    pub use serde::{Serialize, Deserialize};
+    pub use serde::{Deserialize, Serialize};
     pub use serde_json::json;
 
     // Re-export #[route] 宏

@@ -96,6 +96,7 @@ impl RouteError {
     }
 
     /// Get the HTTP status code for this error
+    #[must_use]
     pub fn status_code(&self) -> StatusCode {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
@@ -112,6 +113,7 @@ impl RouteError {
     }
 
     /// Get the error message
+    #[must_use]
     pub fn message(&self) -> String {
         match self {
             Self::BadRequest(msg)
@@ -140,5 +142,5 @@ impl IntoResponse for RouteError {
     }
 }
 
-/// Type alias for Result with RouteError
+/// Type alias for Result with `RouteError`
 pub type Result<T> = std::result::Result<T, RouteError>;

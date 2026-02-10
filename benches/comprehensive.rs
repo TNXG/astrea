@@ -6,8 +6,8 @@ use astrea::prelude::*;
 use astrea::{error::Result, Event};
 use axum::http::{HeaderMap, Method};
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
 use std::collections::HashMap;
+use std::hint::black_box;
 
 /// 模拟用户列表处理函数
 fn simulate_user_list_handler(event: &Event) -> Result<Response> {
@@ -88,7 +88,7 @@ fn bench_user_list_scenario(c: &mut Criterion) {
     );
 
     group.bench_function("handle_user_list", |b| {
-        b.iter(|| black_box(simulate_user_list_handler(black_box(&event))))
+        b.iter(|| black_box(simulate_user_list_handler(black_box(&event))));
     });
 
     group.finish();
@@ -110,7 +110,7 @@ fn bench_user_detail_scenario(c: &mut Criterion) {
     );
 
     group.bench_function("handle_user_detail", |b| {
-        b.iter(|| black_box(simulate_user_detail_handler(black_box(&event))))
+        b.iter(|| black_box(simulate_user_detail_handler(black_box(&event))));
     });
 
     group.finish();
@@ -131,7 +131,7 @@ fn bench_create_user_scenario(c: &mut Criterion) {
     let body = br#"{"name":"Alice","email":"alice@example.com","password":"secret123"}"#;
 
     group.bench_function("handle_create_user", |b| {
-        b.iter(|| black_box(simulate_create_user_handler(black_box(&event), body)))
+        b.iter(|| black_box(simulate_create_user_handler(black_box(&event), body)));
     });
 
     group.finish();
@@ -153,7 +153,7 @@ fn bench_authenticated_request_scenario(c: &mut Criterion) {
     );
 
     group.bench_function("handle_authenticated", |b| {
-        b.iter(|| black_box(simulate_authenticated_handler(black_box(&event))))
+        b.iter(|| black_box(simulate_authenticated_handler(black_box(&event))));
     });
 
     group.finish();
@@ -190,7 +190,7 @@ fn bench_full_request_lifecycle(c: &mut Criterion) {
 
             // 4. 转换为 Axum Response
             black_box(response.into_axum_response())
-        })
+        });
     });
 
     group.finish();
@@ -220,7 +220,7 @@ fn bench_concurrent_style_processing(c: &mut Criterion) {
                 );
                 black_box(get_path(&event));
             }
-        })
+        });
     });
 
     group.finish();
@@ -246,7 +246,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
         b.iter(|| {
             let result: Result<Response> = json(serde_json::json!({"id": "123"}));
             black_box(result)
-        })
+        });
     });
 
     // 错误路径 - 参数缺失
@@ -260,7 +260,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
             HashMap::new(),
         );
 
-        b.iter(|| black_box(get_param_required(&event, "id")))
+        b.iter(|| black_box(get_param_required(&event, "id")));
     });
 
     // 错误路径 - 认证失败
@@ -279,7 +279,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
                 get_header(&event, "authorization")
                     .ok_or_else(|| RouteError::unauthorized("Missing authorization header")),
             )
-        })
+        });
     });
 
     group.finish();
@@ -289,7 +289,7 @@ fn bench_response_size_impact(c: &mut Criterion) {
     let mut group = c.benchmark_group("response_size_impact");
 
     group.bench_function("small_response", |b| {
-        b.iter(|| black_box(json(serde_json::json!({"message": "ok"})).unwrap()))
+        b.iter(|| black_box(json(serde_json::json!({"message": "ok"})).unwrap()));
     });
 
     group.bench_function("medium_response", |b| {
@@ -302,7 +302,7 @@ fn bench_response_size_impact(c: &mut Criterion) {
                 })
             })
             .collect();
-        b.iter(|| black_box(json(&data).unwrap()))
+        b.iter(|| black_box(json(&data).unwrap()));
     });
 
     group.bench_function("large_response", |b| {
@@ -317,7 +317,7 @@ fn bench_response_size_impact(c: &mut Criterion) {
                 })
             })
             .collect();
-        b.iter(|| black_box(json(&data).unwrap()))
+        b.iter(|| black_box(json(&data).unwrap()));
     });
 
     group.finish();

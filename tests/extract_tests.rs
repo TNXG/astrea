@@ -2,7 +2,7 @@
 
 use astrea::prelude::*;
 use astrea::Event;
-use axum::http::{HeaderMap, Method, Uri, HeaderValue};
+use axum::http::{HeaderMap, HeaderValue, Method, Uri};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -76,7 +76,7 @@ fn test_get_param_required_not_exists() {
 
     let result = get_param_required(&event, "missing_param");
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::BadRequest(msg)) => {
             assert!(msg.contains("Missing required parameter"));
@@ -192,7 +192,7 @@ fn test_get_query_param_required_not_exists() {
 
     let result = get_query_param_required(&event, "token");
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::BadRequest(msg)) => {
             assert!(msg.contains("Missing required query parameter"));
@@ -225,7 +225,7 @@ fn test_get_body_json() {
 
     let json_bytes = br#"{"name":"Bob","email":"bob@example.com"}"#;
     let result = get_body::<User>(&event, json_bytes);
-    
+
     assert!(result.is_ok());
     let user = result.unwrap();
     assert_eq!(user.name, "Bob");
@@ -252,7 +252,7 @@ fn test_get_body_json_invalid() {
 
     let invalid_json = b"{invalid json}";
     let result = get_body::<User>(&event, invalid_json);
-    
+
     assert!(result.is_err());
 }
 
@@ -269,7 +269,7 @@ fn test_get_body_bytes() {
 
     let data = b"Binary data \x00\x01\x02\xFF";
     let result = get_body_bytes(&event, data);
-    
+
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), data);
 }
@@ -287,7 +287,7 @@ fn test_get_body_text() {
 
     let text_data = b"Hello, this is a text message!";
     let result = get_body_text(&event, text_data);
-    
+
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "Hello, this is a text message!");
 }
@@ -305,7 +305,7 @@ fn test_get_body_text_invalid_utf8() {
 
     let invalid_utf8 = &[0xFF, 0xFE, 0xFD];
     let result = get_body_text(&event, invalid_utf8);
-    
+
     assert!(result.is_err());
     match result {
         Err(RouteError::BadRequest(msg)) => {
@@ -444,7 +444,7 @@ fn test_get_state_not_found() {
 
     let result = get_state::<AppState>(&event);
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::Internal(_)) => {
             // 预期的错误类型
@@ -483,12 +483,7 @@ fn test_get_method() {
 
 #[test]
 fn test_get_path() {
-    let paths = vec![
-        "/",
-        "/api/users",
-        "/posts/123/comments",
-        "/search?q=rust",
-    ];
+    let paths = vec!["/", "/api/users", "/posts/123/comments", "/search?q=rust"];
 
     for path in paths {
         let event = Event::new(
@@ -538,7 +533,10 @@ fn test_extract_combined_scenario() {
     query.insert("format".to_string(), "detailed".to_string());
 
     let mut headers = HeaderMap::new();
-    headers.insert("Authorization", HeaderValue::from_static("Bearer jwt_token"));
+    headers.insert(
+        "Authorization",
+        HeaderValue::from_static("Bearer jwt_token"),
+    );
     headers.insert("Accept", HeaderValue::from_static("application/json"));
 
     let uri: Uri = "/api/users/789?include=profile&format=detailed"
@@ -556,9 +554,18 @@ fn test_extract_combined_scenario() {
 
     // 验证所有提取功能
     assert_eq!(get_param(&event, "user_id"), Some("789"));
-    assert_eq!(get_query_param(&event, "include"), Some("profile".to_string()));
-    assert_eq!(get_query_param(&event, "format"), Some("detailed".to_string()));
-    assert_eq!(get_header(&event, "authorization"), Some("Bearer jwt_token"));
+    assert_eq!(
+        get_query_param(&event, "include"),
+        Some("profile".to_string())
+    );
+    assert_eq!(
+        get_query_param(&event, "format"),
+        Some("detailed".to_string())
+    );
+    assert_eq!(
+        get_header(&event, "authorization"),
+        Some("Bearer jwt_token")
+    );
     assert_eq!(get_method(&event), &Method::GET);
     assert_eq!(get_path(&event), "/api/users/789");
 }

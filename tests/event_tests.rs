@@ -2,7 +2,7 @@
 
 use astrea::prelude::*;
 use astrea::Event;
-use axum::http::{HeaderMap, Method, Uri, HeaderValue};
+use axum::http::{HeaderMap, HeaderValue, Method, Uri};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -51,11 +51,11 @@ fn test_event_query_params_from_uri() {
     // 在实际使用中，#[route] 宏会从 URI 提取查询参数
     // 这里我们模拟这个过程
     let uri: Uri = "/api/search?q=rust&page=1&limit=10".parse().unwrap();
-    
+
     // 模拟宏会做的事：从 URI 解析查询参数
     let query_str = uri.query().unwrap();
     let parsed_query: HashMap<String, String> = serde_urlencoded::from_str(query_str).unwrap();
-    
+
     let event = Event::new(
         Method::GET,
         "/api/search".to_string(),
@@ -108,15 +108,21 @@ fn test_event_headers() {
     );
 
     let event_headers = event.headers();
-    assert_eq!(event_headers.get("content-type").unwrap(), "application/json");
-    assert_eq!(event_headers.get("authorization").unwrap(), "Bearer token123");
+    assert_eq!(
+        event_headers.get("content-type").unwrap(),
+        "application/json"
+    );
+    assert_eq!(
+        event_headers.get("authorization").unwrap(),
+        "Bearer token123"
+    );
     assert_eq!(event_headers.get("x-request-id").unwrap(), "abc-123");
 }
 
 #[test]
 fn test_event_uri() {
     let uri: Uri = "/api/users/123?include=profile".parse().unwrap();
-    
+
     let event = Event::new(
         Method::GET,
         "/api/users/123".to_string(),
@@ -176,7 +182,7 @@ fn test_event_parse_json_valid() {
 
     let json_bytes = br#"{"name":"Alice","age":30}"#;
     let parsed: TestData = event.parse_json(json_bytes).unwrap();
-    
+
     assert_eq!(parsed.name, "Alice");
     assert_eq!(parsed.age, 30);
 }
@@ -200,7 +206,7 @@ fn test_event_parse_json_invalid() {
 
     let invalid_json = b"not valid json";
     let result = event.parse_json::<TestData>(invalid_json);
-    
+
     assert!(result.is_err());
     match result {
         Err(RouteError::BadRequest(msg)) => {
@@ -223,7 +229,7 @@ fn test_event_parse_text_valid() {
 
     let text_bytes = b"Hello, Astrea!";
     let parsed = event.parse_text(text_bytes).unwrap();
-    
+
     assert_eq!(parsed, "Hello, Astrea!");
 }
 
@@ -240,7 +246,7 @@ fn test_event_parse_text_invalid_utf8() {
 
     let invalid_utf8 = &[0xFF, 0xFE, 0xFD]; // Invalid UTF-8 bytes
     let result = event.parse_text(invalid_utf8);
-    
+
     assert!(result.is_err());
     match result {
         Err(RouteError::BadRequest(msg)) => {
@@ -269,7 +275,7 @@ fn test_event_parse_form_valid() {
 
     let form_bytes = b"username=alice&password=secret123";
     let parsed: FormData = event.parse_form(form_bytes).unwrap();
-    
+
     assert_eq!(parsed.username, "alice");
     assert_eq!(parsed.password, "secret123");
 }
@@ -293,7 +299,7 @@ fn test_event_parse_form_invalid() {
 
     let invalid_form = b"wrong=data";
     let result: Result<FormData> = event.parse_form(invalid_form);
-    
+
     assert!(result.is_err());
 }
 
@@ -402,7 +408,7 @@ fn test_event_clone() {
 #[test]
 fn test_event_empty_query_string() {
     let uri: Uri = "/api/test?".parse().unwrap();
-    
+
     let event = Event::new(
         Method::GET,
         "/api/test".to_string(),
@@ -418,14 +424,12 @@ fn test_event_empty_query_string() {
 
 #[test]
 fn test_event_complex_query_params() {
-    let uri: Uri = "/search?tag=rust&tag=web&status=active"
-        .parse()
-        .unwrap();
-    
+    let uri: Uri = "/search?tag=rust&tag=web&status=active".parse().unwrap();
+
     // 解析查询参数（serde_urlencoded 对重复键的处理）
     let query_str = uri.query().unwrap();
     let parsed_query: HashMap<String, String> = serde_urlencoded::from_str(query_str).unwrap();
-    
+
     let event = Event::new(
         Method::GET,
         "/search".to_string(),

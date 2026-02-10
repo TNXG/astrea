@@ -3,7 +3,10 @@
 //! 这些函数提供便捷的 API 来访问请求数据，
 //! 无需复杂的 Axum 提取器签名。
 
-use crate::{error::{Result, RouteError}, Event};
+use crate::{
+    error::{Result, RouteError},
+    Event,
+};
 use axum::http::HeaderMap;
 
 /// 获取路径参数
@@ -13,8 +16,9 @@ use axum::http::HeaderMap;
 /// ```rust,ignore
 /// let user_id = get_param(&event, "id").unwrap();
 /// ```
+#[must_use]
 pub fn get_param<'a>(event: &'a Event, key: &str) -> Option<&'a str> {
-    event.params().get(key).map(|s| s.as_str())
+    event.params().get(key).map(std::string::String::as_str)
 }
 
 /// 获取必需的路径参数
@@ -27,9 +31,8 @@ pub fn get_param<'a>(event: &'a Event, key: &str) -> Option<&'a str> {
 /// let user_id = get_param_required(&event, "id")?;
 /// ```
 pub fn get_param_required<'a>(event: &'a Event, key: &str) -> Result<&'a str> {
-    get_param(event, key).ok_or_else(|| {
-        RouteError::bad_request(format!("Missing required parameter: {}", key))
-    })
+    get_param(event, key)
+        .ok_or_else(|| RouteError::bad_request(format!("Missing required parameter: {key}")))
 }
 
 /// 获取所有查询参数
@@ -40,6 +43,7 @@ pub fn get_param_required<'a>(event: &'a Event, key: &str) -> Result<&'a str> {
 /// let query = get_query(&event);
 /// let search = query.get("q").unwrap_or(&"".to_string());
 /// ```
+#[must_use]
 pub fn get_query(event: &Event) -> &std::collections::HashMap<String, String> {
     event.query()
 }
@@ -52,6 +56,7 @@ pub fn get_query(event: &Event) -> &std::collections::HashMap<String, String> {
 /// let code = get_query_param(&event, "code")
 ///     .ok_or_else(|| error("Missing code"))?;
 /// ```
+#[must_use]
 pub fn get_query_param(event: &Event, key: &str) -> Option<String> {
     event.query().get(key).cloned()
 }
@@ -60,9 +65,8 @@ pub fn get_query_param(event: &Event, key: &str) -> Option<String> {
 ///
 /// 如果参数不存在则返回错误。
 pub fn get_query_param_required(event: &Event, key: &str) -> Result<String> {
-    get_query_param(event, key).ok_or_else(|| {
-        RouteError::bad_request(format!("Missing required query parameter: {}", key))
-    })
+    get_query_param(event, key)
+        .ok_or_else(|| RouteError::bad_request(format!("Missing required query parameter: {key}")))
 }
 
 /// 将请求体解析为 JSON
@@ -112,11 +116,9 @@ pub fn get_body_text(event: &Event, bytes: &[u8]) -> Result<String> {
 /// let auth = get_header(&event, "authorization")
 ///     .ok_or_else(|| error("Missing authorization header"))?;
 /// ```
+#[must_use]
 pub fn get_header<'a>(event: &'a Event, name: &str) -> Option<&'a str> {
-    event
-        .headers()
-        .get(name)
-        .and_then(|v| v.to_str().ok())
+    event.headers().get(name).and_then(|v| v.to_str().ok())
 }
 
 /// 获取所有请求头
@@ -126,6 +128,7 @@ pub fn get_header<'a>(event: &'a Event, name: &str) -> Option<&'a str> {
 /// ```rust,ignore
 /// let headers = get_headers(&event);
 /// ```
+#[must_use]
 pub fn get_headers(event: &Event) -> &HeaderMap {
     event.headers()
 }
@@ -138,9 +141,9 @@ pub fn get_headers(event: &Event) -> &HeaderMap {
 /// let pool = get_state::<PgPool>(&event)?;
 /// ```
 pub fn get_state<T: Clone + Send + Sync + 'static>(event: &Event) -> Result<T> {
-    event.state().ok_or_else(|| {
-        RouteError::Internal(anyhow::anyhow!("State not found"))
-    })
+    event
+        .state()
+        .ok_or_else(|| RouteError::Internal(anyhow::anyhow!("State not found")))
 }
 
 /// 获取 HTTP 方法
@@ -150,6 +153,7 @@ pub fn get_state<T: Clone + Send + Sync + 'static>(event: &Event) -> Result<T> {
 /// ```rust,ignore
 /// let method = get_method(&event);
 /// ```
+#[must_use]
 pub fn get_method(event: &Event) -> &axum::http::Method {
     event.method()
 }
@@ -161,6 +165,7 @@ pub fn get_method(event: &Event) -> &axum::http::Method {
 /// ```rust,ignore
 /// let path = get_path(&event);
 /// ```
+#[must_use]
 pub fn get_path(event: &Event) -> &str {
     event.path()
 }
@@ -172,6 +177,7 @@ pub fn get_path(event: &Event) -> &str {
 /// ```rust,ignore
 /// let uri = get_uri(&event);
 /// ```
+#[must_use]
 pub fn get_uri(event: &Event) -> &axum::http::Uri {
     event.uri()
 }

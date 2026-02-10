@@ -27,6 +27,7 @@ impl Response {
     /// 创建默认响应
     ///
     /// 默认为 200 OK，无响应头和空响应体。
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -38,6 +39,7 @@ impl Response {
     /// ```rust,ignore
     /// json(data)?.status(StatusCode::CREATED)
     /// ```
+    #[must_use]
     pub fn status(mut self, status: StatusCode) -> Self {
         self.status = status;
         self
@@ -52,6 +54,7 @@ impl Response {
     ///     .status(StatusCode::CREATED)
     ///     .header("X-Request-Id", "abc123")
     /// ```
+    #[must_use]
     pub fn header(mut self, key: &str, value: &str) -> Self {
         if let Ok(name) = HeaderName::try_from(key) {
             if let Ok(v) = HeaderValue::try_from(value) {
@@ -73,10 +76,8 @@ impl Response {
     pub fn into_axum_response(mut self) -> AxumResponse {
         // 默认添加 Server 头（用户未手动设置时）
         if !self.headers.contains_key(header::SERVER) {
-            self.headers.insert(
-                header::SERVER,
-                HeaderValue::from_static("Astrea"),
-            );
+            self.headers
+                .insert(header::SERVER, HeaderValue::from_static("Astrea"));
         }
         (self.status, self.headers, self.body).into_response()
     }
@@ -110,7 +111,7 @@ impl IntoResponse for Response {
 /// ```
 pub fn json<T: Serialize>(data: T) -> Result<Response> {
     let body = serde_json::to_vec(&data)
-        .map_err(|e| RouteError::Internal(anyhow::anyhow!("Failed to serialize JSON: {}", e)))?;
+        .map_err(|e| RouteError::Internal(anyhow::anyhow!("Failed to serialize JSON: {e}")))?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -180,7 +181,7 @@ pub fn html(content: impl Into<String>) -> Response {
 /// ```
 pub fn redirect(url: &str) -> Result<Response> {
     let value = HeaderValue::try_from(url)
-        .map_err(|_| RouteError::bad_request(format!("Invalid redirect URL: {}", url)))?;
+        .map_err(|_| RouteError::bad_request(format!("Invalid redirect URL: {url}")))?;
 
     let mut headers = HeaderMap::new();
     headers.insert(header::LOCATION, value);
@@ -199,6 +200,7 @@ pub fn redirect(url: &str) -> Result<Response> {
 /// ```rust,ignore
 /// no_content()
 /// ```
+#[must_use]
 pub fn no_content() -> Response {
     Response {
         status: StatusCode::NO_CONTENT,
@@ -214,6 +216,7 @@ pub fn no_content() -> Response {
 /// ```rust,ignore
 /// bytes(data).content_type("image/png")
 /// ```
+#[must_use]
 pub fn bytes(data: Vec<u8>) -> Response {
     Response {
         status: StatusCode::OK,
@@ -229,6 +232,7 @@ pub fn bytes(data: Vec<u8>) -> Response {
 /// ```rust,ignore
 /// stream(body)
 /// ```
+#[must_use]
 pub fn stream(body: Body) -> AxumResponse {
     body.into_response()
 }
@@ -245,7 +249,10 @@ mod tests {
             response.headers.get("content-type").unwrap(),
             "application/json"
         );
-        assert_eq!(String::from_utf8_lossy(&response.body), r#"{"message":"Hello"}"#);
+        assert_eq!(
+            String::from_utf8_lossy(&response.body),
+            r#"{"message":"Hello"}"#
+        );
     }
 
     #[test]

@@ -23,7 +23,7 @@ fn create_test_event(path: &str, with_params: bool, with_query: bool) -> Event {
         query.insert("sort".to_string(), "desc".to_string());
     }
 
-    let uri: Uri = format!("{}?page=1&limit=10", path).parse().unwrap();
+    let uri: Uri = format!("{path}?page=1&limit=10").parse().unwrap();
 
     Event::new(
         Method::GET,
@@ -49,7 +49,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 HashMap::new(),
                 HashMap::new(),
             ))
-        })
+        });
     });
 
     // 带参数的 Event 创建
@@ -66,7 +66,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 params,
                 HashMap::new(),
             ))
-        })
+        });
     });
 
     // 带查询参数的 Event 创建
@@ -84,7 +84,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 HashMap::new(),
                 query,
             ))
-        })
+        });
     });
 
     group.finish();
@@ -107,25 +107,25 @@ fn bench_event_access(c: &mut Criterion) {
     // 访问方法
     group.bench_function("method_access", |b| {
         let event = create_test_event("/users/123", false, false);
-        b.iter(|| black_box(event.method()))
+        b.iter(|| black_box(event.method()));
     });
 
     // 访问路径
     group.bench_function("path_access", |b| {
         let event = create_test_event("/users/123", false, false);
-        b.iter(|| black_box(event.path()))
+        b.iter(|| black_box(event.path()));
     });
 
     // 访问 URI
     group.bench_function("uri_access", |b| {
         let event = create_test_event("/users/123", false, false);
-        b.iter(|| black_box(event.uri()))
+        b.iter(|| black_box(event.uri()));
     });
 
     // 访问 headers
     group.bench_function("headers_access", |b| {
         let event = create_test_event("/users/123", false, false);
-        b.iter(|| black_box(event.headers()))
+        b.iter(|| black_box(event.headers()));
     });
 
     group.finish();
@@ -137,21 +137,21 @@ fn bench_param_access(c: &mut Criterion) {
     // params 是预填充的，访问应该很快
     group.bench_function("existing_param", |b| {
         let event = create_test_event("/users/123", true, false);
-        b.iter(|| black_box(event.params().get("id")))
+        b.iter(|| black_box(event.params().get("id")));
     });
 
     group.bench_function("params_get_all", |b| {
         let event = create_test_event("/users/123", true, false);
-        b.iter(|| black_box(event.params().clone()))
+        b.iter(|| black_box(event.params().clone()));
     });
 
     // 测试不同数量的参数
-    for param_count in [1, 5, 10, 20].iter() {
+    for param_count in &[1, 5, 10, 20] {
         group.throughput(Throughput::Elements(*param_count as u64));
 
         let mut params = HashMap::new();
         for i in 0..*param_count {
-            params.insert(format!("param_{}", i), format!("value_{}", i));
+            params.insert(format!("param_{i}"), format!("value_{i}"));
         }
 
         group.bench_with_input(
@@ -170,7 +170,7 @@ fn bench_param_access(c: &mut Criterion) {
                     for key in event.params().keys() {
                         black_box(event.params().get(key));
                     }
-                })
+                });
             },
         );
     }
@@ -191,7 +191,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HashMap::new(),
             HashMap::new(),
         );
-        b.iter(|| black_box(event.query()))
+        b.iter(|| black_box(event.query()));
     });
 
     group.bench_function("single_param", |b| {
@@ -203,7 +203,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HashMap::new(),
             HashMap::new(),
         );
-        b.iter(|| black_box(event.query()))
+        b.iter(|| black_box(event.query()));
     });
 
     group.bench_function("multiple_params", |b| {
@@ -215,7 +215,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HashMap::new(),
             HashMap::new(),
         );
-        b.iter(|| black_box(event.query()))
+        b.iter(|| black_box(event.query()));
     });
 
     // 测试懒加载缓存 - 第二次访问应该更快
@@ -230,14 +230,14 @@ fn bench_query_parsing(c: &mut Criterion) {
         );
         // 第一次调用触发解析
         let _ = event.query();
-        b.iter(|| black_box(event.query()))
+        b.iter(|| black_box(event.query()));
     });
 
-    for param_count in [1, 5, 10, 20].iter() {
+    for param_count in &[1, 5, 10, 20] {
         group.throughput(Throughput::Elements(*param_count as u64));
 
         let query_string: String = (0..*param_count)
-            .map(|i| format!("key{}=value{}", i, i))
+            .map(|i| format!("key{i}=value{i}"))
             .collect::<Vec<_>>()
             .join("&");
 
@@ -248,12 +248,12 @@ fn bench_query_parsing(c: &mut Criterion) {
                 let event = Event::new(
                     Method::GET,
                     "/test".to_string(),
-                    format!("/test?{}", query_string).parse().unwrap(),
+                    format!("/test?{query_string}").parse().unwrap(),
                     HeaderMap::new(),
                     HashMap::new(),
                     HashMap::new(),
                 );
-                b.iter(|| black_box(event.query()))
+                b.iter(|| black_box(event.query()));
             },
         );
     }
@@ -285,15 +285,15 @@ fn bench_json_parsing(c: &mut Criterion) {
     }
 
     group.bench_function("small_json", |b| {
-        b.iter(|| black_box(event.parse_json::<TestData>(small_json)))
+        b.iter(|| black_box(event.parse_json::<TestData>(small_json)));
     });
 
     group.bench_function("medium_json", |b| {
-        b.iter(|| black_box(event.parse_json::<serde_json::Value>(medium_json)))
+        b.iter(|| black_box(event.parse_json::<serde_json::Value>(medium_json)));
     });
 
     group.bench_function("large_json", |b| {
-        b.iter(|| black_box(event.parse_json::<serde_json::Value>(large_json)))
+        b.iter(|| black_box(event.parse_json::<serde_json::Value>(large_json)));
     });
 
     group.finish();
@@ -313,12 +313,12 @@ fn bench_text_parsing(c: &mut Criterion) {
 
     group.bench_function("valid_utf8", |b| {
         let text = "Hello, World!";
-        b.iter(|| black_box(event.parse_text(text.as_bytes())))
+        b.iter(|| black_box(event.parse_text(text.as_bytes())));
     });
 
     group.bench_function("long_text", |b| {
         let text = "a".repeat(10000);
-        b.iter(|| black_box(event.parse_text(text.as_bytes())))
+        b.iter(|| black_box(event.parse_text(text.as_bytes())));
     });
 
     group.finish();
@@ -343,7 +343,7 @@ fn bench_state_access(c: &mut Criterion) {
     event.state = Some(std::sync::Arc::new(state));
 
     group.bench_function("get_state", |b| {
-        b.iter(|| black_box(event.state::<TestState>()))
+        b.iter(|| black_box(event.state::<TestState>()));
     });
 
     group.finish();

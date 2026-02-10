@@ -4,7 +4,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn};
+use syn::{ItemFn, parse_macro_input};
 
 use std::path::{Path, PathBuf};
 
@@ -36,29 +36,24 @@ pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
     let block = &input_fn.block;
 
     if input_fn.sig.asyncness.is_none() {
-        return syn::Error::new_spanned(
-            fn_name,
-            "#[route] 函数必须是 async fn",
-        )
-        .to_compile_error()
-        .into();
+        return syn::Error::new_spanned(fn_name, "#[route] 函数必须是 async fn")
+            .to_compile_error()
+            .into();
     }
 
     // 解析参数名
     let mut event_param_name = None;
     for input in inputs {
-        if let syn::FnArg::Typed(arg) = input {
-            if let syn::Pat::Ident(ident) = &*arg.pat {
-                if ident.ident == "event" {
-                    event_param_name = Some(ident.ident.clone());
-                }
-            }
+        if let syn::FnArg::Typed(arg) = input
+            && let syn::Pat::Ident(ident) = &*arg.pat
+            && ident.ident == "event"
+        {
+            event_param_name = Some(ident.ident.clone());
         }
     }
 
-    let event_name = event_param_name.unwrap_or_else(|| {
-        syn::Ident::new("event", proc_macro2::Span::call_site())
-    });
+    let event_name = event_param_name
+        .unwrap_or_else(|| syn::Ident::new("event", proc_macro2::Span::call_site()));
 
     // 生成包装函数 — 所有外部类型通过 ::astrea:: 引用，用户无需直接依赖 axum / bytes
     let expanded = quote! {
@@ -184,10 +179,8 @@ pub fn generate_routes(input: TokenStream) -> TokenStream {
             .unwrap_or_else(|_| route.file_path.clone());
         let axum_path = &route.axum_path;
         let method_upper = &route.method;
-        let method_fn = syn::Ident::new(
-            &route.method.to_lowercase(),
-            proc_macro2::Span::call_site(),
-        );
+        let method_fn =
+            syn::Ident::new(&route.method.to_lowercase(), proc_macro2::Span::call_site());
 
         mod_decls.push(quote! {
             mod #mod_name {

@@ -2,10 +2,10 @@
 
 use astrea::prelude::*;
 use astrea::Event;
-use axum::http::{HeaderMap, Method, HeaderValue};
+use axum::http::{HeaderMap, HeaderValue, Method};
+use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde_json::json;
 
 // ============================================================================
 // 完整的处理器场景测试
@@ -36,10 +36,10 @@ async fn test_simple_handler_flow() {
 
     let result = handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert_eq!(response.status, StatusCode::OK);
-    
+
     let body_str = String::from_utf8_lossy(&response.body);
     assert!(body_str.contains("Hello, Astrea!"));
 }
@@ -76,7 +76,7 @@ async fn test_post_handler_with_json_body() {
 
     let result = create_user_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert_eq!(response.status, StatusCode::CREATED);
 }
@@ -86,7 +86,7 @@ async fn test_handler_with_query_params() {
     async fn search_handler(event: Event) -> Result<Response> {
         let query = get_query_param(&event, "q")
             .ok_or_else(|| RouteError::bad_request("Missing search query"))?;
-        
+
         let page = get_query_param(&event, "page")
             .and_then(|p| p.parse::<u32>().ok())
             .unwrap_or(1);
@@ -113,7 +113,7 @@ async fn test_handler_with_query_params() {
 
     let result = search_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     let body_str = String::from_utf8_lossy(&response.body);
     assert!(body_str.contains("rust"));
@@ -184,7 +184,7 @@ async fn test_handler_with_state() {
 
     async fn handler_with_state(event: Event) -> Result<Response> {
         let state = get_state::<AppState>(&event)?;
-        
+
         json(json!({
             "db_configured": !state.db_url.is_empty(),
             "api_configured": !state.api_key.is_empty()
@@ -209,7 +209,7 @@ async fn test_handler_with_state() {
 
     let result = handler_with_state(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     let body_str = String::from_utf8_lossy(&response.body);
     assert!(body_str.contains("true"));
@@ -236,7 +236,7 @@ async fn test_handler_error_propagation() {
 
     let result = failing_handler(event).await;
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::NotFound(msg)) => {
             assert_eq!(msg, "Resource not found");
@@ -258,9 +258,11 @@ async fn test_handler_with_validation_errors() {
         if username.is_empty() {
             return Err(RouteError::validation("Username is required"));
         }
-        
+
         if password.len() < 8 {
-            return Err(RouteError::validation("Password must be at least 8 characters"));
+            return Err(RouteError::validation(
+                "Password must be at least 8 characters",
+            ));
         }
 
         json(json!({
@@ -292,7 +294,7 @@ async fn test_rest_api_list_resources() {
         let page = get_query_param(&event, "page")
             .and_then(|p| p.parse::<u32>().ok())
             .unwrap_or(1);
-        
+
         let limit = get_query_param(&event, "limit")
             .and_then(|l| l.parse::<u32>().ok())
             .unwrap_or(10);
@@ -331,10 +333,10 @@ async fn test_rest_api_list_resources() {
 async fn test_rest_api_get_single_resource() {
     async fn get_user(event: Event) -> Result<Response> {
         let user_id = get_param_required(&event, "id")?;
-        
+
         // 模拟数据库查询
         if user_id == "999" {
-            return Err(RouteError::not_found(format!("User {} not found", user_id)));
+            return Err(RouteError::not_found(format!("User {user_id} not found")));
         }
 
         json(json!({
@@ -381,7 +383,7 @@ async fn test_rest_api_get_single_resource() {
 async fn test_rest_api_delete_resource() {
     async fn delete_user(event: Event) -> Result<Response> {
         let user_id = get_param_required(&event, "id")?;
-        
+
         // 模拟删除操作
         if user_id == "1" {
             return Err(RouteError::forbidden("Cannot delete admin user"));
@@ -431,7 +433,9 @@ async fn test_rest_api_delete_resource() {
 #[tokio::test]
 async fn test_handler_returning_html() {
     async fn html_handler(_event: Event) -> Result<Response> {
-        Ok(html("<h1>Welcome to Astrea</h1><p>A file-based router for Axum.</p>"))
+        Ok(html(
+            "<h1>Welcome to Astrea</h1><p>A file-based router for Axum.</p>",
+        ))
     }
 
     let event = Event::new(
@@ -445,7 +449,7 @@ async fn test_handler_returning_html() {
 
     let result = html_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert_eq!(
         response.headers.get("content-type").unwrap(),
@@ -457,7 +461,7 @@ async fn test_handler_returning_html() {
 async fn test_handler_returning_text() {
     async fn text_handler(event: Event) -> Result<Response> {
         let name = get_param(&event, "name").unwrap_or("Guest");
-        Ok(text(format!("Hello, {}!", name)))
+        Ok(text(format!("Hello, {name}!")))
     }
 
     let mut params = HashMap::new();
@@ -474,12 +478,9 @@ async fn test_handler_returning_text() {
 
     let result = text_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
-    assert_eq!(
-        String::from_utf8_lossy(&response.body),
-        "Hello, Rustacean!"
-    );
+    assert_eq!(String::from_utf8_lossy(&response.body), "Hello, Rustacean!");
 }
 
 #[tokio::test]
@@ -499,7 +500,7 @@ async fn test_handler_with_redirect() {
 
     let result = redirect_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert_eq!(response.status, StatusCode::FOUND);
     assert_eq!(response.headers.get("location").unwrap(), "/new-location");
@@ -531,7 +532,7 @@ async fn test_complex_business_logic() {
 
         // 检查应用状态
         let state = get_state::<AppState>(&event)?;
-        
+
         // 模拟文件大小检查
         let file_size = 1024; // 假设的文件大小
         if file_size > state.max_upload_size {
@@ -567,7 +568,7 @@ async fn test_complex_business_logic() {
 
     let result = upload_handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert_eq!(response.status, StatusCode::CREATED);
 }
@@ -643,8 +644,7 @@ async fn test_empty_response_body() {
 #[tokio::test]
 async fn test_handler_with_custom_status_code() {
     async fn handler(_event: Event) -> Result<Response> {
-        json(json!({"message": "Resource created"}))
-            .map(|r| r.status(StatusCode::CREATED))
+        json(json!({"message": "Resource created"})).map(|r| r.status(StatusCode::CREATED))
     }
 
     let event = Event::new(
@@ -681,7 +681,7 @@ async fn test_handler_with_multiple_headers() {
 
     let result = handler(event).await;
     assert!(result.is_ok());
-    
+
     let response = result.unwrap();
     assert!(response.headers.contains_key("x-request-id"));
     assert!(response.headers.contains_key("x-rate-limit"));

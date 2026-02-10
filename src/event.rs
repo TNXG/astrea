@@ -65,45 +65,49 @@ impl Event {
     }
 
     /// Get the HTTP method
+    #[must_use]
     pub fn method(&self) -> &Method {
         &self.inner.method
     }
 
     /// Get the request path
+    #[must_use]
     pub fn path(&self) -> &str {
         &self.inner.path
     }
 
     /// Get the original URI
+    #[must_use]
     pub fn uri(&self) -> &Uri {
         &self.inner.raw_uri
     }
 
     /// Get request headers
+    #[must_use]
     pub fn headers(&self) -> &HeaderMap {
         &self.inner.headers
     }
 
     /// Get path parameters (lazy cached)
+    #[must_use]
     pub fn params(&self) -> &HashMap<String, String> {
-        self.inner.params.get_or_init(|| HashMap::new())
+        self.inner.params.get_or_init(HashMap::new)
     }
 
     /// Get query parameters (lazy cached)
+    #[must_use]
     pub fn query(&self) -> &HashMap<String, String> {
         self.inner.query.get_or_init(|| {
             self.inner
                 .raw_uri
                 .query()
-                .map(|q| {
-                    serde_urlencoded::from_str(q)
-                        .unwrap_or_else(|_| HashMap::new())
-                })
+                .map(|q| serde_urlencoded::from_str(q).unwrap_or_else(|_| HashMap::new()))
                 .unwrap_or_default()
         })
     }
 
     /// Get a value from the application state
+    #[must_use]
     pub fn state<T: Clone + Send + Sync + 'static>(&self) -> Option<T> {
         self.state
             .as_ref()
@@ -116,20 +120,20 @@ impl Event {
     /// This is a convenience method for the generated wrapper code.
     pub fn parse_json<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> Result<T> {
         serde_json::from_slice(bytes)
-            .map_err(|e| RouteError::bad_request(format!("Invalid JSON: {}", e)))
+            .map_err(|e| RouteError::bad_request(format!("Invalid JSON: {e}")))
     }
 
     /// Parse form data from bytes
     pub fn parse_form<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> Result<T> {
         let text = self.parse_text(bytes)?;
         serde_urlencoded::from_str(&text)
-            .map_err(|e| RouteError::bad_request(format!("Invalid form data: {}", e)))
+            .map_err(|e| RouteError::bad_request(format!("Invalid form data: {e}")))
     }
 
     /// Parse text body from bytes
     pub fn parse_text(&self, bytes: &[u8]) -> Result<String> {
         std::str::from_utf8(bytes)
-            .map(|s| s.to_string())
-            .map_err(|e| RouteError::bad_request(format!("Invalid UTF-8: {}", e)))
+            .map(std::string::ToString::to_string)
+            .map_err(|e| RouteError::bad_request(format!("Invalid UTF-8: {e}")))
     }
 }

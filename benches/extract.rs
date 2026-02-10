@@ -60,18 +60,18 @@ fn bench_get_param(c: &mut Criterion) {
     let event = create_event_with_params();
 
     group.bench_function("existing_param", |b| {
-        b.iter(|| black_box(get_param(black_box(&event), "id")))
+        b.iter(|| black_box(get_param(black_box(&event), "id")));
     });
 
     group.bench_function("missing_param", |b| {
-        b.iter(|| black_box(get_param(black_box(&event), "missing")))
+        b.iter(|| black_box(get_param(black_box(&event), "missing")));
     });
 
     // 测试参数缓存效果
     group.bench_function("cached_access", |b| {
         // 第一次访问触发初始化
         let _ = event.params();
-        b.iter(|| black_box(get_param(black_box(&event), "id")))
+        b.iter(|| black_box(get_param(black_box(&event), "id")));
     });
 
     group.finish();
@@ -83,7 +83,7 @@ fn bench_get_param_required(c: &mut Criterion) {
     let event = create_event_with_params();
 
     group.bench_function("existing_param", |b| {
-        b.iter(|| black_box(get_param_required(black_box(&event), "id")))
+        b.iter(|| black_box(get_param_required(black_box(&event), "id")));
     });
 
     group.finish();
@@ -95,32 +95,32 @@ fn bench_get_query_param(c: &mut Criterion) {
     let event = create_event_with_query();
 
     group.bench_function("existing_query_param", |b| {
-        b.iter(|| black_box(get_query_param(black_box(&event), "q")))
+        b.iter(|| black_box(get_query_param(black_box(&event), "q")));
     });
 
     group.bench_function("missing_query_param", |b| {
-        b.iter(|| black_box(get_query_param(black_box(&event), "missing")))
+        b.iter(|| black_box(get_query_param(black_box(&event), "missing")));
     });
 
     // 测试查询字符串解析缓存
     group.bench_function("cached_query_access", |b| {
         let _ = event.query();
-        b.iter(|| black_box(get_query_param(black_box(&event), "q")))
+        b.iter(|| black_box(get_query_param(black_box(&event), "q")));
     });
 
     // 测试不同数量的查询参数
-    for param_count in [1, 5, 10, 20].iter() {
+    for param_count in &[1, 5, 10, 20] {
         group.throughput(Throughput::Elements(*param_count as u64));
 
         let query_string: String = (0..*param_count)
-            .map(|i| format!("key{}=value{}", i, i))
+            .map(|i| format!("key{i}=value{i}"))
             .collect::<Vec<_>>()
             .join("&");
 
         let event = Event::new(
             Method::GET,
             "/test".to_string(),
-            format!("/test?{}", query_string).parse().unwrap(),
+            format!("/test?{query_string}").parse().unwrap(),
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
@@ -142,7 +142,7 @@ fn bench_get_query(c: &mut Criterion) {
     let event = create_event_with_query();
 
     group.bench_function("get_all_query", |b| {
-        b.iter(|| black_box(get_query(black_box(&event))))
+        b.iter(|| black_box(get_query(black_box(&event))));
     });
 
     group.finish();
@@ -154,15 +154,15 @@ fn bench_get_header(c: &mut Criterion) {
     let event = create_event_with_headers();
 
     group.bench_function("existing_header", |b| {
-        b.iter(|| black_box(get_header(black_box(&event), "authorization")))
+        b.iter(|| black_box(get_header(black_box(&event), "authorization")));
     });
 
     group.bench_function("missing_header", |b| {
-        b.iter(|| black_box(get_header(black_box(&event), "missing")))
+        b.iter(|| black_box(get_header(black_box(&event), "missing")));
     });
 
     group.bench_function("case_insensitive", |b| {
-        b.iter(|| black_box(get_header(black_box(&event), "Content-Type")))
+        b.iter(|| black_box(get_header(black_box(&event), "Content-Type")));
     });
 
     group.finish();
@@ -174,7 +174,7 @@ fn bench_get_headers(c: &mut Criterion) {
     let event = create_event_with_headers();
 
     group.bench_function("get_all_headers", |b| {
-        b.iter(|| black_box(get_headers(black_box(&event))))
+        b.iter(|| black_box(get_headers(black_box(&event))));
     });
 
     group.finish();
@@ -203,11 +203,11 @@ fn bench_get_body(c: &mut Criterion) {
     let small_body = br#"{"name":"Alice","email":"alice@example.com","age":30}"#;
 
     group.bench_function("parse_small_json", |b| {
-        b.iter(|| black_box(get_body::<CreateUserRequest>(black_box(&event), small_body)))
+        b.iter(|| black_box(get_body::<CreateUserRequest>(black_box(&event), small_body)));
     });
 
     // 测试不同大小的 JSON body
-    for size in [10, 100, 1000].iter() {
+    for size in &[10, 100, 1000] {
         let json_body = format!(r#"{{"data":"{}"}}"#, "x".repeat(*size));
 
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
@@ -216,7 +216,7 @@ fn bench_get_body(c: &mut Criterion) {
                     black_box(&event),
                     json_body.as_bytes(),
                 ))
-            })
+            });
         });
     }
 
@@ -237,14 +237,14 @@ fn bench_get_body_text(c: &mut Criterion) {
 
     group.bench_function("short_text", |b| {
         let text = "Hello, World!";
-        b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())))
+        b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())));
     });
 
-    for size in [100, 1000, 10000].iter() {
+    for size in &[100, 1000, 10000] {
         group.throughput(Throughput::Bytes(*size as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
             let text = "a".repeat(*size);
-            b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())))
+            b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())));
         });
     }
 
@@ -265,7 +265,7 @@ fn bench_get_body_bytes(c: &mut Criterion) {
 
     group.bench_function("get_bytes", |b| {
         let bytes = b"raw data";
-        b.iter(|| black_box(get_body_bytes(black_box(&event), bytes)))
+        b.iter(|| black_box(get_body_bytes(black_box(&event), bytes)));
     });
 
     group.finish();
@@ -284,7 +284,7 @@ fn bench_get_method(c: &mut Criterion) {
     );
 
     group.bench_function("get_http_method", |b| {
-        b.iter(|| black_box(get_method(black_box(&event))))
+        b.iter(|| black_box(get_method(black_box(&event))));
     });
 
     group.finish();
@@ -303,7 +303,7 @@ fn bench_get_path(c: &mut Criterion) {
     );
 
     group.bench_function("get_request_path", |b| {
-        b.iter(|| black_box(get_path(black_box(&event))))
+        b.iter(|| black_box(get_path(black_box(&event))));
     });
 
     group.finish();
@@ -322,7 +322,7 @@ fn bench_get_uri(c: &mut Criterion) {
     );
 
     group.bench_function("get_request_uri", |b| {
-        b.iter(|| black_box(get_uri(black_box(&event))))
+        b.iter(|| black_box(get_uri(black_box(&event))));
     });
 
     group.finish();
@@ -354,7 +354,7 @@ fn bench_combined_extract(c: &mut Criterion) {
             let _auth = get_header(black_box(&event), "authorization");
             let _path = get_path(black_box(&event));
             let _method = get_method(black_box(&event));
-        })
+        });
     });
 
     group.finish();

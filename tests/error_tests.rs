@@ -1,9 +1,9 @@
 //! 全面测试 Error 模块的错误处理功能
 
-use astrea::error::{RouteError, Result};
+use anyhow::anyhow;
+use astrea::error::{Result, RouteError};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use anyhow::anyhow;
 
 // ============================================================================
 // 错误创建测试
@@ -12,7 +12,7 @@ use anyhow::anyhow;
 #[test]
 fn test_bad_request_error() {
     let error = RouteError::bad_request("Invalid input");
-    
+
     assert_eq!(error.status_code(), StatusCode::BAD_REQUEST);
     assert_eq!(error.message(), "Invalid input");
 }
@@ -20,7 +20,7 @@ fn test_bad_request_error() {
 #[test]
 fn test_not_found_error() {
     let error = RouteError::not_found("Resource not found");
-    
+
     assert_eq!(error.status_code(), StatusCode::NOT_FOUND);
     assert_eq!(error.message(), "Resource not found");
 }
@@ -28,7 +28,7 @@ fn test_not_found_error() {
 #[test]
 fn test_unauthorized_error() {
     let error = RouteError::unauthorized("Authentication required");
-    
+
     assert_eq!(error.status_code(), StatusCode::UNAUTHORIZED);
     assert_eq!(error.message(), "Authentication required");
 }
@@ -36,7 +36,7 @@ fn test_unauthorized_error() {
 #[test]
 fn test_forbidden_error() {
     let error = RouteError::forbidden("Access denied");
-    
+
     assert_eq!(error.status_code(), StatusCode::FORBIDDEN);
     assert_eq!(error.message(), "Access denied");
 }
@@ -44,7 +44,7 @@ fn test_forbidden_error() {
 #[test]
 fn test_validation_error() {
     let error = RouteError::validation("Email format is invalid");
-    
+
     assert_eq!(error.status_code(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(error.message(), "Email format is invalid");
 }
@@ -52,7 +52,7 @@ fn test_validation_error() {
 #[test]
 fn test_custom_error() {
     let error = RouteError::custom(StatusCode::IM_A_TEAPOT, "I'm a teapot");
-    
+
     assert_eq!(error.status_code(), StatusCode::IM_A_TEAPOT);
     assert_eq!(error.message(), "I'm a teapot");
 }
@@ -64,7 +64,7 @@ fn test_custom_error() {
 #[test]
 fn test_method_not_allowed_error() {
     let error = RouteError::MethodNotAllowed("Only GET is allowed".to_string());
-    
+
     assert_eq!(error.status_code(), StatusCode::METHOD_NOT_ALLOWED);
     assert!(error.message().contains("Only GET is allowed"));
 }
@@ -72,7 +72,7 @@ fn test_method_not_allowed_error() {
 #[test]
 fn test_conflict_error() {
     let error = RouteError::Conflict("Resource already exists".to_string());
-    
+
     assert_eq!(error.status_code(), StatusCode::CONFLICT);
     assert_eq!(error.message(), "Resource already exists");
 }
@@ -80,7 +80,7 @@ fn test_conflict_error() {
 #[test]
 fn test_rate_limit_error() {
     let error = RouteError::RateLimit("Too many requests, please try again later".to_string());
-    
+
     assert_eq!(error.status_code(), StatusCode::TOO_MANY_REQUESTS);
     assert!(error.message().contains("Too many requests"));
 }
@@ -89,7 +89,7 @@ fn test_rate_limit_error() {
 fn test_internal_error_from_anyhow() {
     let anyhow_error = anyhow!("Database connection failed");
     let error = RouteError::Internal(anyhow_error);
-    
+
     assert_eq!(error.status_code(), StatusCode::INTERNAL_SERVER_ERROR);
     assert!(error.message().contains("Database connection failed"));
 }
@@ -102,7 +102,7 @@ fn test_internal_error_from_anyhow() {
 fn test_error_from_anyhow() {
     let anyhow_error = anyhow!("Something went wrong");
     let route_error: RouteError = anyhow_error.into();
-    
+
     assert_eq!(route_error.status_code(), StatusCode::INTERNAL_SERVER_ERROR);
 }
 
@@ -119,7 +119,7 @@ fn test_question_mark_operator_with_anyhow() {
 
     let result = handler();
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::Internal(_)) => {
             // 预期的错误类型
@@ -135,8 +135,8 @@ fn test_question_mark_operator_with_anyhow() {
 #[test]
 fn test_error_display_bad_request() {
     let error = RouteError::BadRequest("Test message".to_string());
-    let display = format!("{}", error);
-    
+    let display = format!("{error}");
+
     assert!(display.contains("Bad request"));
     assert!(display.contains("Test message"));
 }
@@ -144,8 +144,8 @@ fn test_error_display_bad_request() {
 #[test]
 fn test_error_display_not_found() {
     let error = RouteError::NotFound("User not found".to_string());
-    let display = format!("{}", error);
-    
+    let display = format!("{error}");
+
     assert!(display.contains("Not found"));
     assert!(display.contains("User not found"));
 }
@@ -156,8 +156,8 @@ fn test_error_display_custom() {
         status: StatusCode::SERVICE_UNAVAILABLE,
         message: "Service temporarily unavailable".to_string(),
     };
-    let display = format!("{}", error);
-    
+    let display = format!("{error}");
+
     assert!(display.contains("503"));
     assert!(display.contains("Service temporarily unavailable"));
 }
@@ -170,7 +170,7 @@ fn test_error_display_custom() {
 fn test_error_into_response_bad_request() {
     let error = RouteError::bad_request("Invalid data");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
@@ -178,7 +178,7 @@ fn test_error_into_response_bad_request() {
 fn test_error_into_response_not_found() {
     let error = RouteError::not_found("Page not found");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
@@ -186,7 +186,7 @@ fn test_error_into_response_not_found() {
 fn test_error_into_response_unauthorized() {
     let error = RouteError::unauthorized("Login required");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
 
@@ -194,7 +194,7 @@ fn test_error_into_response_unauthorized() {
 fn test_error_into_response_forbidden() {
     let error = RouteError::forbidden("Insufficient permissions");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 }
 
@@ -202,7 +202,7 @@ fn test_error_into_response_forbidden() {
 fn test_error_into_response_validation() {
     let error = RouteError::validation("Field is required");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
 }
 
@@ -210,7 +210,7 @@ fn test_error_into_response_validation() {
 fn test_error_into_response_internal() {
     let error = RouteError::Internal(anyhow!("Internal server error"));
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }
 
@@ -218,7 +218,7 @@ fn test_error_into_response_internal() {
 fn test_error_into_response_custom() {
     let error = RouteError::custom(StatusCode::NOT_IMPLEMENTED, "Feature not implemented");
     let response = error.into_response();
-    
+
     assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
 }
 
@@ -235,12 +235,12 @@ fn test_status_code_mapping() {
         (RouteError::forbidden(""), StatusCode::FORBIDDEN),
         (RouteError::validation(""), StatusCode::UNPROCESSABLE_ENTITY),
         (
-            RouteError::MethodNotAllowed("".to_string()),
+            RouteError::MethodNotAllowed(String::new()),
             StatusCode::METHOD_NOT_ALLOWED,
         ),
-        (RouteError::Conflict("".to_string()), StatusCode::CONFLICT),
+        (RouteError::Conflict(String::new()), StatusCode::CONFLICT),
         (
-            RouteError::RateLimit("".to_string()),
+            RouteError::RateLimit(String::new()),
             StatusCode::TOO_MANY_REQUESTS,
         ),
         (
@@ -261,11 +261,26 @@ fn test_status_code_mapping() {
 #[test]
 fn test_message_extraction() {
     let errors = vec![
-        (RouteError::bad_request("Bad request message"), "Bad request message"),
-        (RouteError::not_found("Not found message"), "Not found message"),
-        (RouteError::unauthorized("Unauthorized message"), "Unauthorized message"),
-        (RouteError::forbidden("Forbidden message"), "Forbidden message"),
-        (RouteError::validation("Validation message"), "Validation message"),
+        (
+            RouteError::bad_request("Bad request message"),
+            "Bad request message",
+        ),
+        (
+            RouteError::not_found("Not found message"),
+            "Not found message",
+        ),
+        (
+            RouteError::unauthorized("Unauthorized message"),
+            "Unauthorized message",
+        ),
+        (
+            RouteError::forbidden("Forbidden message"),
+            "Forbidden message",
+        ),
+        (
+            RouteError::validation("Validation message"),
+            "Validation message",
+        ),
     ];
 
     for (error, expected_msg) in errors {
@@ -279,7 +294,7 @@ fn test_message_extraction_custom() {
         status: StatusCode::PAYMENT_REQUIRED,
         message: "Payment required message".to_string(),
     };
-    
+
     assert_eq!(error.message(), "Payment required message");
 }
 
@@ -319,14 +334,13 @@ fn test_error_chain_with_context() {
     }
 
     fn outer_function() -> Result<()> {
-        inner_function()
-            .map_err(|e| RouteError::Internal(anyhow!("Failed to fetch user: {}", e)))?;
+        inner_function().map_err(|e| RouteError::Internal(anyhow!("Failed to fetch user: {e}")))?;
         Ok(())
     }
 
     let result = outer_function();
     assert!(result.is_err());
-    
+
     match result {
         Err(RouteError::Internal(e)) => {
             let msg = e.to_string();
@@ -362,8 +376,8 @@ fn test_multiple_error_types_in_function() {
 #[test]
 fn test_error_with_dynamic_message() {
     let user_id = 12345;
-    let error = RouteError::not_found(format!("User with ID {} not found", user_id));
-    
+    let error = RouteError::not_found(format!("User with ID {user_id} not found"));
+
     assert!(error.message().contains("12345"));
     assert!(error.message().contains("User with ID"));
 }
@@ -374,9 +388,9 @@ fn test_error_with_multiline_message() {
         "Multiple validation errors:\n\
          - Email is required\n\
          - Password must be at least 8 characters\n\
-         - Username is already taken"
+         - Username is already taken",
     );
-    
+
     let msg = error.message();
     assert!(msg.contains("Email is required"));
     assert!(msg.contains("Password must be at least 8 characters"));
@@ -417,7 +431,7 @@ fn test_error_builder_pattern_all_variants() {
 #[test]
 fn test_error_with_unicode_message() {
     let error = RouteError::bad_request("错误：用户名包含非法字符 🚫");
-    
+
     assert!(error.message().contains("错误"));
     assert!(error.message().contains("🚫"));
 }
@@ -425,7 +439,7 @@ fn test_error_with_unicode_message() {
 #[test]
 fn test_error_with_quotes_in_message() {
     let error = RouteError::bad_request(r#"Invalid JSON: expected "name" field"#);
-    
+
     assert!(error.message().contains("expected"));
     assert!(error.message().contains("name"));
 }
@@ -433,7 +447,7 @@ fn test_error_with_quotes_in_message() {
 #[test]
 fn test_error_empty_message() {
     let error = RouteError::bad_request("");
-    
+
     assert_eq!(error.message(), "");
     assert_eq!(error.status_code(), StatusCode::BAD_REQUEST);
 }
@@ -445,8 +459,8 @@ fn test_error_empty_message() {
 #[test]
 fn test_error_debug_format() {
     let error = RouteError::bad_request("Debug test");
-    let debug_str = format!("{:?}", error);
-    
+    let debug_str = format!("{error:?}");
+
     assert!(debug_str.contains("BadRequest"));
     assert!(debug_str.contains("Debug test"));
 }
@@ -454,8 +468,8 @@ fn test_error_debug_format() {
 #[test]
 fn test_error_debug_format_internal() {
     let error = RouteError::Internal(anyhow!("Internal debug test"));
-    let debug_str = format!("{:?}", error);
-    
+    let debug_str = format!("{error:?}");
+
     assert!(debug_str.contains("Internal"));
 }
 
@@ -467,19 +481,16 @@ fn test_error_debug_format_internal() {
 fn test_authentication_scenario() {
     fn check_auth(token: Option<&str>) -> Result<String> {
         let token = token.ok_or_else(|| RouteError::unauthorized("Missing token"))?;
-        
+
         if token != "valid_token" {
             return Err(RouteError::unauthorized("Invalid token"));
         }
-        
+
         Ok("user123".to_string())
     }
 
     // 无 token
-    assert!(matches!(
-        check_auth(None),
-        Err(RouteError::Unauthorized(_))
-    ));
+    assert!(matches!(check_auth(None), Err(RouteError::Unauthorized(_))));
 
     // 无效 token
     assert!(matches!(
@@ -496,8 +507,7 @@ fn test_permission_check_scenario() {
     fn check_permission(user_role: &str, required_role: &str) -> Result<()> {
         if user_role != required_role {
             return Err(RouteError::forbidden(format!(
-                "Requires {} role, but user has {} role",
-                required_role, user_role
+                "Requires {required_role} role, but user has {user_role} role"
             )));
         }
         Ok(())
@@ -523,15 +533,14 @@ fn test_resource_conflict_scenario() {
     fn create_user(username: &str, existing_users: &[&str]) -> Result<()> {
         if existing_users.contains(&username) {
             return Err(RouteError::Conflict(format!(
-                "Username '{}' is already taken",
-                username
+                "Username '{username}' is already taken"
             )));
         }
         Ok(())
     }
 
     let users = vec!["alice", "bob"];
-    
+
     // 用户名冲突
     let result = create_user("alice", &users);
     assert!(matches!(result, Err(RouteError::Conflict(_))));
