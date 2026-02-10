@@ -59,7 +59,7 @@ pub use astrea_macro::generate_routes;
 
 pub mod prelude {
     //! 便捷导入的预导出模块
-    pub use crate::error::RouteError;
+    pub use crate::error::{RouteError, Result};
     pub use crate::event::Event;
     pub use crate::extract::*;
     pub use crate::response::{json, text, html, redirect, no_content, Response};
