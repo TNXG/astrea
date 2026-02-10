@@ -2,7 +2,7 @@
 //!
 //! 演示如何使用 Astrea 文件路由器构建 Web 应用
 
-// 由 generate_routes! 宏在编译时扫描 routes/ 目录并生成路由代码
+// 由 generate_routes! 宏在编译时扫描 src/routes/ 目录并生成路由代码
 #[allow(dead_code, unused_imports)]
 mod routes {
     astrea::generate_routes!();
@@ -13,8 +13,7 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_target(false)
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 

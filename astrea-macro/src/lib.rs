@@ -120,7 +120,7 @@ struct ScannedRoute {
 /// # 用法
 ///
 /// ```rust,ignore
-/// // 默认扫描 routes/ 目录
+/// // 默认扫描 src/routes/ 目录
 /// mod routes {
 ///     astrea::generate_routes!();
 /// }
@@ -137,7 +137,7 @@ struct ScannedRoute {
 #[proc_macro]
 pub fn generate_routes(input: TokenStream) -> TokenStream {
     let routes_dir_name = if input.is_empty() {
-        "routes".to_string()
+        "src/routes".to_string()
     } else {
         let lit = parse_macro_input!(input as syn::LitStr);
         lit.value()
