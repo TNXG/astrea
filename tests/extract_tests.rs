@@ -1,7 +1,7 @@
 //! 全面测试 Extract 模块的所有提取函数
 
-use astrea::prelude::*;
 use astrea::Event;
+use astrea::prelude::*;
 use axum::http::{HeaderMap, HeaderValue, Method, Uri};
 use std::collections::HashMap;
 use std::sync::Arc;

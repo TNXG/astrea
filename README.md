@@ -1,10 +1,14 @@
 # Astrea
 
+[![Crates.io](https://img.shields.io/crates/v/astrea)](https://crates.io/crates/astrea)
+[![Documentation](https://docs.rs/astrea/badge.svg)](https://docs.rs/astrea)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-1.80%2B-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
 [![Axum](https://img.shields.io/badge/axum-0.8%2B-blue.svg)](https://github.com/tokio-rs/axum)
 
-> A file-system based router for Axum, inspired by [Nitro](https://nitro.unjs.io/) and [H3](https://h3.unjs.io/).
+> A file-system based routing framework for Axum, inspired by [Nitro](https://nitro.unjs.io/) and [H3](https://h3.unjs.io/).
+
+**[crates.io](https://crates.io/crates/astrea)** | **[GitHub](https://github.com/TNXG/astrea)** | **[Documentation](https://docs.rs/astrea)**
 
 [中文文档](README_ZH.md)
 
@@ -23,8 +27,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-astrea = "0.1"
+astrea = "0.0"
 tokio = { version = "1", features = ["full"] }
+```
+
+Or use cargo-edit:
+
+```bash
+cargo add astrea
 ```
 
 ## Quick Start
@@ -170,23 +180,44 @@ json(json!({ "status": "created" }))?
     .header("X-Request-Id", "abc123")
 ```
 
+## Examples
+
+Run the examples with `cargo run --example <name>`:
+
+```bash
+# Simple hello world
+cargo run --example hello
+
+# JSON API with route parameters
+cargo run --example json_api
+
+# Request data extraction (query params, headers, JSON body)
+cargo run --example request_data
+```
+
+For a complete application example, see the `basic-app/` directory.
+
 ## Project Structure
 
 ```
 astrea/
-├── astrea-macro/     # Procedural macros
-│   └── src/lib.rs    # #[route] and generate_routes! macros
-├── basic-app/        # Example application
-│   └── routes/       # Route file examples
-├── benches/          # Performance benchmarks
+├── astrea-macro/         # Procedural macros
+│   └── src/lib.rs        # #[route] and generate_routes! macros
+├── basic-app/            # Complete example application (independent project)
+│   └── src/routes/       # File-based route examples
+├── examples/             # Simple code examples
+│   ├── hello.rs          # Minimal hello world
+│   ├── json_api.rs       # JSON API with parameters
+│   └── request_data.rs   # Request data extraction
+├── benches/              # Performance benchmarks
 ├── src/
-│   ├── lib.rs        # Main library exports
-│   ├── event.rs      # Event type
-│   ├── extract.rs    # Helper extraction functions
-│   ├── response.rs   # Response builders
-│   ├── error.rs      # Error types
-│   └── router.rs     # Router utilities
-└── tests/            # Integration tests
+│   ├── lib.rs            # Main library exports
+│   ├── event.rs          # Event type
+│   ├── extract.rs        # Helper extraction functions
+│   ├── response.rs       # Response builders
+│   ├── error.rs          # Error types
+│   └── router.rs         # Router utilities
+└── tests/                # Integration tests
 ```
 
 ## Author

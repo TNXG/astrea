@@ -1,7 +1,7 @@
 //! 集成测试 - 测试完整的处理器流程和框架功能
 
-use astrea::prelude::*;
 use astrea::Event;
+use astrea::prelude::*;
 use axum::http::{HeaderMap, HeaderValue, Method};
 use serde_json::json;
 use std::collections::HashMap;

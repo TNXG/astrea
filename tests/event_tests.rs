@@ -1,7 +1,7 @@
 //! 全面测试 Event 模块的功能
 
-use astrea::prelude::*;
 use astrea::Event;
+use astrea::prelude::*;
 use axum::http::{HeaderMap, HeaderValue, Method, Uri};
 use std::collections::HashMap;
 use std::sync::Arc;

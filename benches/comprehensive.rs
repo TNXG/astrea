@@ -3,9 +3,9 @@
 //! 测试完整的请求处理流程，模拟真实应用场景
 
 use astrea::prelude::*;
-use astrea::{error::Result, Event};
+use astrea::{Event, error::Result};
 use axum::http::{HeaderMap, Method};
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::hint::black_box;
 

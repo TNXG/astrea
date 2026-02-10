@@ -1,10 +1,14 @@
 # Astrea
 
+[![Crates.io](https://img.shields.io/crates/v/astrea)](https://crates.io/crates/astrea)
+[![Documentation](https://docs.rs/astrea/badge.svg)](https://docs.rs/astrea)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-1.80%2B-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
 [![Axum](https://img.shields.io/badge/axum-0.8%2B-blue.svg)](https://github.com/tokio-rs/axum)
 
-> 基于 Axum 的文件路由器，受 [Nitro](https://nitro.unjs.io/) 和 [H3](https://h3.unjs.io/) 启发。
+> 基于 Axum 的文件系统路由框架，受 [Nitro](https://nitro.unjs.io/) 和 [H3](https://h3.unjs.io/) 启发。
+
+**[crates.io](https://crates.io/crates/astrea)** | **[GitHub](https://github.com/TNXG/astrea)** | **[文档](https://docs.rs/astrea)**
 
 ## 特性
 
@@ -21,8 +25,14 @@
 
 ```toml
 [dependencies]
-astrea = "0.1"
+astrea = "0.0"
 tokio = { version = "1", features = ["full"] }
+```
+
+或使用 cargo-edit：
+
+```bash
+cargo add astrea
 ```
 
 ## 快速开始
@@ -168,23 +178,44 @@ json(json!({ "status": "created" }))?
     .header("X-Request-Id", "abc123")
 ```
 
+## 示例
+
+使用 `cargo run --example <name>` 运行示例:
+
+```bash
+# 简单的 hello world
+cargo run --example hello
+
+# 带路由参数的 JSON API
+cargo run --example json_api
+
+# 请求数据提取（查询参数、请求头、JSON body）
+cargo run --example request_data
+```
+
+完整的应用示例请参见 `basic-app/` 目录。
+
 ## 项目结构
 
 ```
 astrea/
-├── astrea-macro/     # 过程宏
-│   └── src/lib.rs    # #[route] 和 generate_routes! 宏
-├── basic-app/        # 示例应用
-│   └── routes/       # 路由文件示例
-├── benches/          # 性能基准测试
+├── astrea-macro/         # 过程宏
+│   └── src/lib.rs        # #[route] 和 generate_routes! 宏
+├── basic-app/            # 完整示例应用（独立项目）
+│   └── src/routes/       # 基于文件的路由示例
+├── examples/             # 简单代码示例
+│   ├── hello.rs          # 最小 hello world
+│   ├── json_api.rs       # 带参数的 JSON API
+│   └── request_data.rs   # 请求数据提取
+├── benches/              # 性能基准测试
 ├── src/
-│   ├── lib.rs        # 主库导出
-│   ├── event.rs      # Event 类型
-│   ├── extract.rs    # 辅助提取函数
-│   ├── response.rs   # 响应构建器
-│   ├── error.rs      # 错误类型
-│   └── router.rs     # 路由工具
-└── tests/            # 集成测试
+│   ├── lib.rs            # 主库导出
+│   ├── event.rs          # Event 类型
+│   ├── extract.rs        # 辅助提取函数
+│   ├── response.rs       # 响应构建器
+│   ├── error.rs          # 错误类型
+│   └── router.rs         # 路由工具
+└── tests/                # 集成测试
 ```
 
 ## 作者

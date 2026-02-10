@@ -54,7 +54,7 @@
 use crate::error::{Result, RouteError};
 use axum::{
     body::Body,
-    http::{header, HeaderMap, HeaderName, HeaderValue, StatusCode},
+    http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response as AxumResponse},
 };
 use serde::Serialize;
@@ -148,10 +148,10 @@ impl Response {
     /// ```
     #[must_use]
     pub fn header(mut self, key: &str, value: &str) -> Self {
-        if let Ok(name) = HeaderName::try_from(key) {
-            if let Ok(v) = HeaderValue::try_from(value) {
-                self.headers.insert(name, v);
-            }
+        if let Ok(name) = HeaderName::try_from(key)
+            && let Ok(v) = HeaderValue::try_from(value)
+        {
+            self.headers.insert(name, v);
         }
         self
     }

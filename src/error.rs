@@ -25,9 +25,9 @@
 //! ```
 
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response as AxumResponse},
-    Json,
 };
 use serde_json::json;
 use std::fmt;

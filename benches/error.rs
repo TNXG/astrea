@@ -5,7 +5,7 @@
 use astrea::RouteError;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use std::hint::black_box;
 
 fn bench_error_creation(c: &mut Criterion) {
