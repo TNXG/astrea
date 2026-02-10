@@ -38,7 +38,7 @@ proc-macro2 = "1.0"
 criterion = "0.8.2"
 
 # Internal dependencies / 内部依赖
-astrea-macro = { path = "astrea-macro" }
+astrea-macro = { version = "0.0.1", path = "astrea-macro" }
 
 [package]
 name = "astrea"
