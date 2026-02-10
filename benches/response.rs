@@ -4,7 +4,8 @@
 
 use astrea::response::{json, text, html, redirect, no_content, bytes};
 use axum::http::StatusCode;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]

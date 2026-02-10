@@ -3,9 +3,10 @@
 //! 测试完整的请求处理流程，模拟真实应用场景
 
 use astrea::prelude::*;
-use astrea::{Event, error::Result};
+use astrea::{error::Result, Event};
 use axum::http::{HeaderMap, Method};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use std::collections::HashMap;
 
 /// 模拟用户列表处理函数
@@ -45,6 +46,7 @@ fn simulate_user_detail_handler(event: &Event) -> Result<Response> {
 
 /// 模拟创建用户处理函数
 #[derive(serde::Deserialize)]
+#[allow(dead_code)]
 struct CreateUserRequest {
     name: String,
     email: String,
@@ -183,7 +185,8 @@ fn bench_full_request_lifecycle(c: &mut Criterion) {
             let response = json(serde_json::json!({
                 "id": _id.unwrap(),
                 "format": _format
-            })).unwrap();
+            }))
+            .unwrap();
 
             // 4. 转换为 Axum Response
             black_box(response.into_axum_response())
@@ -272,9 +275,10 @@ fn bench_error_handling_paths(c: &mut Criterion) {
         );
 
         b.iter(|| {
-            black_box(get_header(&event, "authorization").ok_or_else(|| {
-                RouteError::unauthorized("Missing authorization header")
-            }))
+            black_box(
+                get_header(&event, "authorization")
+                    .ok_or_else(|| RouteError::unauthorized("Missing authorization header")),
+            )
         })
     });
 
@@ -285,9 +289,7 @@ fn bench_response_size_impact(c: &mut Criterion) {
     let mut group = c.benchmark_group("response_size_impact");
 
     group.bench_function("small_response", |b| {
-        b.iter(|| {
-            black_box(json(serde_json::json!({"message": "ok"})).unwrap())
-        })
+        b.iter(|| black_box(json(serde_json::json!({"message": "ok"})).unwrap()))
     });
 
     group.bench_function("medium_response", |b| {

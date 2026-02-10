@@ -4,8 +4,9 @@
 
 use astrea::Event;
 use axum::http::{HeaderMap, Method, Uri};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::collections::HashMap;
+use std::hint::black_box;
 
 /// 创建测试用的 Event
 fn create_test_event(path: &str, with_params: bool, with_query: bool) -> Event {
@@ -95,9 +96,7 @@ fn bench_event_cloning(c: &mut Criterion) {
     let mut group = c.benchmark_group("event_cloning");
 
     // Event 是 Arc 包裹的，克隆应该非常快
-    group.bench_function("clone_arc", |b| {
-        b.iter(|| black_box(event.clone()))
-    });
+    group.bench_function("clone_arc", |b| b.iter(|| black_box(event.clone())));
 
     group.finish();
 }
@@ -155,21 +154,25 @@ fn bench_param_access(c: &mut Criterion) {
             params.insert(format!("param_{}", i), format!("value_{}", i));
         }
 
-        group.bench_with_input(BenchmarkId::from_parameter(param_count), param_count, |b, _| {
-            let event = Event::new(
-                Method::GET,
-                "/test".to_string(),
-                "/test".parse().unwrap(),
-                HeaderMap::new(),
-                params.clone(),
-                HashMap::new(),
-            );
-            b.iter(|| {
-                for key in event.params().keys() {
-                    black_box(event.params().get(key));
-                }
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(param_count),
+            param_count,
+            |b, _| {
+                let event = Event::new(
+                    Method::GET,
+                    "/test".to_string(),
+                    "/test".parse().unwrap(),
+                    HeaderMap::new(),
+                    params.clone(),
+                    HashMap::new(),
+                );
+                b.iter(|| {
+                    for key in event.params().keys() {
+                        black_box(event.params().get(key));
+                    }
+                })
+            },
+        );
     }
 
     group.finish();
@@ -238,17 +241,21 @@ fn bench_query_parsing(c: &mut Criterion) {
             .collect::<Vec<_>>()
             .join("&");
 
-        group.bench_with_input(BenchmarkId::from_parameter(param_count), param_count, |b, _| {
-            let event = Event::new(
-                Method::GET,
-                "/test".to_string(),
-                format!("/test?{}", query_string).parse().unwrap(),
-                HeaderMap::new(),
-                HashMap::new(),
-                HashMap::new(),
-            );
-            b.iter(|| black_box(event.query()))
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(param_count),
+            param_count,
+            |b, _| {
+                let event = Event::new(
+                    Method::GET,
+                    "/test".to_string(),
+                    format!("/test?{}", query_string).parse().unwrap(),
+                    HeaderMap::new(),
+                    HashMap::new(),
+                    HashMap::new(),
+                );
+                b.iter(|| black_box(event.query()))
+            },
+        );
     }
 
     group.finish();
@@ -271,6 +278,7 @@ fn bench_json_parsing(c: &mut Criterion) {
     );
 
     #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
     struct TestData {
         name: String,
         value: i32,

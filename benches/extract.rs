@@ -5,8 +5,9 @@
 use astrea::prelude::*;
 use astrea::Event;
 use axum::http::{HeaderMap, Method};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::collections::HashMap;
+use std::hint::black_box;
 
 /// 创建带有参数的 Event
 fn create_event_with_params() -> Event {
@@ -125,9 +126,11 @@ fn bench_get_query_param(c: &mut Criterion) {
             HashMap::new(),
         );
 
-        group.bench_with_input(BenchmarkId::from_parameter(param_count), param_count, |b, _| {
-            b.iter(|| black_box(get_query_param(black_box(&event), "key5")))
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(param_count),
+            param_count,
+            |b, _| b.iter(|| black_box(get_query_param(black_box(&event), "key5"))),
+        );
     }
 
     group.finish();
@@ -190,6 +193,7 @@ fn bench_get_body(c: &mut Criterion) {
     );
 
     #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
     struct CreateUserRequest {
         name: String,
         email: String,
@@ -204,10 +208,7 @@ fn bench_get_body(c: &mut Criterion) {
 
     // 测试不同大小的 JSON body
     for size in [10, 100, 1000].iter() {
-        let json_body = format!(
-            r#"{{"data":"{}"}}"#,
-            "x".repeat(*size)
-        );
+        let json_body = format!(r#"{{"data":"{}"}}"#, "x".repeat(*size));
 
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
