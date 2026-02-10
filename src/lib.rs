@@ -77,6 +77,7 @@
 pub mod error;
 pub mod event;
 pub mod extract;
+pub mod middleware;
 pub mod response;
 pub mod router;
 
@@ -101,6 +102,12 @@ pub use serde_json;
 /// Re-export of `tokio`
 /// / Re-export tokio
 pub use tokio;
+/// Re-export of `tower`
+/// / Re-export tower
+pub use tower;
+/// Re-export of `tower_http`
+/// / Re-export tower_http
+pub use tower_http;
 /// Re-export of `tracing`
 /// / Re-export tracing
 pub use tracing;
@@ -134,7 +141,8 @@ pub mod prelude {
     pub use crate::error::{Result, RouteError};
     pub use crate::event::Event;
     pub use crate::extract::*;
-    pub use crate::response::{html, json, no_content, redirect, text, Response};
+    pub use crate::middleware::{Middleware, MiddlewareMode};
+    pub use crate::response::{Response, html, json, no_content, redirect, text};
 
     // Re-export common Axum types
     // Re-export 常用 Axum 类型
