@@ -1,15 +1,19 @@
 [workspace]
-members = [".", "basic-app"]
+members = [".", "astrea-macro"]
 resolver = "2"
 
-[package]
-name = "astrea"
-version = "0.1.0"
-edition = "2021"
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+authors = ["TNXG <tnxg@outlook.jp>"]
+license = "MIT"
+repository = "https://github.com/TNXG/astrea"
+homepage = "https://github.com/TNXG/astrea"
+documentation = "https://docs.rs/astrea"
 
-[dependencies]
+[workspace.dependencies]
+# External dependencies / 外部依赖
 anyhow = "1.0.101"
-astrea-macro = { path = "astrea-macro" }
 axum = { version = "0.8.8", features = ["multipart"] }
 bytes = "1.11.1"
 http = "1.4.0"
@@ -23,15 +27,54 @@ thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["full"] }
 tower = "0.5.3"
 tracing = "0.1"
-tower-http = { version = "0.6.8", features = [
-    "cors",
-    "trace",
-    "compression-br",
-    "compression-gzip",
-] }
+tower-http = { version = "0.6.8", features = ["cors", "trace", "compression-br", "compression-gzip"] }
+
+# Macro dependencies / 宏依赖
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+# Dev dependencies / 开发依赖
+criterion = "0.8.2"
+
+# Internal dependencies / 内部依赖
+astrea-macro = { path = "astrea-macro" }
+
+[package]
+name = "astrea"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "A file-system based routing framework for Axum with automatic code generation"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+keywords = ["axum", "router", "web", "framework", "filesystem"]
+categories = ["web-programming::http-server", "development-tools::build-utils"]
+rust-version = "1.85"
+
+[dependencies]
+anyhow = { workspace = true }
+astrea-macro = { workspace = true }
+axum = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+http-body = { workspace = true }
+hyper = { workspace = true }
+once_cell = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_urlencoded = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tracing = { workspace = true }
+tower-http = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.8.2"
+criterion = { workspace = true }
 
 [[bench]]
 name = "event"
