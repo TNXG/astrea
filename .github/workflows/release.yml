@@ -34,11 +34,11 @@ jobs:
 
       - name: Publish astrea-macro
         working-directory: ./astrea-macro
-        run: cargo publish --allow-dirty
+        run: cargo publish || true
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Publish astrea
-        run: cargo publish --allow-dirty
+        run: cargo publish || true
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
