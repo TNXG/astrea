@@ -9,7 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation = "https://docs.rs/astrea-macro"
 readme = "../README.md"
-keywords = ["axum", "router", "macro", "web", "filesystem", "code-generation"]
+keywords = ["axum", "router", "macro", "web", "filesystem"]
 categories = ["development-tools::procedural-macro-helpers", "web-programming"]
 rust-version = "1.85"
 
