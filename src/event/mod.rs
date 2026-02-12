@@ -295,7 +295,10 @@ impl Event {
     ///     json(json!({ "message": format!("User {} created", body.name) }))
     /// }
     /// ```
-    pub fn parse_json<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> crate::error::Result<T> {
+    pub fn parse_json<T: serde::de::DeserializeOwned>(
+        &self,
+        bytes: &[u8],
+    ) -> crate::error::Result<T> {
         self.inner.parse_json(bytes)
     }
 
@@ -332,7 +335,10 @@ impl Event {
     ///     // Process login...
     /// }
     /// ```
-    pub fn parse_form<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> crate::error::Result<T> {
+    pub fn parse_form<T: serde::de::DeserializeOwned>(
+        &self,
+        bytes: &[u8],
+    ) -> crate::error::Result<T> {
         self.inner.parse_form(bytes)
     }
 

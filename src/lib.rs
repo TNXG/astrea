@@ -78,6 +78,8 @@ pub mod error;
 pub mod event;
 pub mod extract;
 pub mod middleware;
+#[cfg(feature = "openapi")]
+pub mod openapi;
 pub mod response;
 pub mod router;
 

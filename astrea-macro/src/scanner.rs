@@ -204,40 +204,104 @@ fn dir_name_to_path_part(name: &str) -> String {
 // Log collection helpers / 日志收集辅助函数
 // ────────────────────────────────────────────────────
 
-/// Collect (method, path) pairs from all routes in the tree for logging
+/// Detailed route information for TUI display
 ///
-/// / 从树中所有路由收集 (方法, 路径) 对用于日志
-pub fn collect_route_logs(scope: &MiddlewareScope) -> Vec<(String, String)> {
-    let mut logs: Vec<(String, String)> = scope
+/// / 用于 TUI 显示的详细路由信息
+pub struct RouteDetailLog {
+    /// HTTP method
+    /// / HTTP 方法
+    pub method: String,
+    /// Route path
+    /// / 路由路径
+    pub path: String,
+    /// Middleware scope chain applied to this route (e.g., ["/", "/api"])
+    /// / 作用于此路由的中间件作用域链（如 ["/", "/api"]）
+    pub middleware_chain: Vec<String>,
+}
+
+/// Detailed middleware scope information for TUI display
+///
+/// / 用于 TUI 显示的详细中间件作用域信息
+pub struct MiddlewareDetailLog {
+    /// Scope display path (e.g., "/" or "/api")
+    /// / 作用域显示路径
+    pub scope_path: String,
+    /// Parent scope path, if any
+    /// / 父作用域路径（如果有）
+    pub parent_path: Option<String>,
+    /// Module name — used at runtime to call `middleware()` and read mode
+    /// / 模块名 — 在运行时调用 `middleware()` 并读取 mode
+    pub module_name: String,
+}
+
+/// Collect detailed route information including middleware chain
+///
+/// / 收集包含中间件链的详细路由信息
+pub fn collect_route_detail_logs(
+    scope: &MiddlewareScope,
+    parent_chain: &[String],
+) -> Vec<RouteDetailLog> {
+    // Build the middleware chain for this scope
+    // 构建此作用域的中间件链
+    let mut chain = parent_chain.to_vec();
+    if let Some(mw) = &scope.middleware {
+        chain.push(mw.scope_path.clone());
+    }
+
+    let mut logs: Vec<RouteDetailLog> = scope
         .routes
         .iter()
-        .map(|r| (r.method.clone(), r.axum_path.clone()))
+        .map(|r| RouteDetailLog {
+            method: r.method.clone(),
+            path: r.axum_path.clone(),
+            middleware_chain: chain.clone(),
+        })
         .collect();
+
     for child in &scope.children {
-        logs.extend(collect_route_logs(child));
+        // Child scopes will determine their own chain based on mode at runtime,
+        // but at compile time we pass the full parent chain — the codegen will
+        // decide at runtime whether to show the inherited chain or just the child.
+        // 子作用域在运行时根据 mode 决定自己的链，但编译时传递完整的父链 —
+        // codegen 将在运行时决定是显示继承链还是仅显示子级。
+        logs.extend(collect_route_detail_logs(child, &chain));
     }
-    // Sort: longer paths first, then alphabetically
-    // 排序：路径越长越靠前，然后按字母排序
+
+    // Sort: shorter paths first (more natural reading order), then alphabetically
+    // 排序：较短路径优先（更自然的阅读顺序），然后按字母排序
     logs.sort_by(|a, b| {
-        let len_cmp = b.1.len().cmp(&a.1.len());
+        let len_cmp = a.path.len().cmp(&b.path.len());
         if len_cmp != std::cmp::Ordering::Equal {
             return len_cmp;
         }
-        a.1.cmp(&b.1)
+        a.path.cmp(&b.path).then(a.method.cmp(&b.method))
     });
     logs
 }
 
-/// Collect middleware scope display paths for logging
+/// Collect detailed middleware scope information including parent relationships
 ///
-/// / 收集中间件作用域显示路径用于日志
-pub fn collect_middleware_logs(scope: &MiddlewareScope) -> Vec<String> {
+/// / 收集包含父级关系的详细中间件作用域信息
+pub fn collect_middleware_detail_logs(
+    scope: &MiddlewareScope,
+    parent_path: Option<&str>,
+) -> Vec<MiddlewareDetailLog> {
     let mut logs = Vec::new();
+    let current_path = scope.middleware.as_ref().map(|mw| mw.scope_path.as_str());
+
     if let Some(mw) = &scope.middleware {
-        logs.push(mw.scope_path.clone());
+        logs.push(MiddlewareDetailLog {
+            scope_path: mw.scope_path.clone(),
+            parent_path: parent_path.map(|s| s.to_string()),
+            module_name: mw.module_name.clone(),
+        });
     }
+
     for child in &scope.children {
-        logs.extend(collect_middleware_logs(child));
+        logs.extend(collect_middleware_detail_logs(
+            child,
+            current_path.or(parent_path),
+        ));
     }
     logs
 }

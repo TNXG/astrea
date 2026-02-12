@@ -2,10 +2,7 @@
 //!
 //! / 请求体提取
 
-use crate::{
-    Event,
-    error::Result,
-};
+use crate::{Event, error::Result};
 
 /// Parse request body as JSON
 ///

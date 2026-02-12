@@ -1,9 +1,9 @@
 <p align="center">
   <h1 align="center">Astrea</h1>
   <p align="center">
-    A file-system based routing framework for <a href="https://github.com/tokio-rs/axum">Axum</a>.
+    基于文件系统的 <a href="https://github.com/tokio-rs/axum">Axum</a> 路由框架。
     <br />
-    Inspired by <a href="https://nitro.unjs.io/">Nitro</a> and <a href="https://h3.unjs.io/">H3</a>.
+    灵感来自 <a href="https://nitro.unjs.io/">Nitro</a> 和 <a href="https://h3.unjs.io/">H3</a>。
   </p>
 </p>
 
@@ -14,52 +14,52 @@
 </p>
 
 <p align="center">
-  <a href="README.zh-CN.md">简体中文</a>
+  <a href="README.md">English</a>
 </p>
 
 ---
 
-## What Is Astrea?
+## Astrea 是什么？
 
-Astrea turns your **file structure** into **API routes** — at compile time, with zero runtime cost. Drop a `.rs` file into the `src/routes/` folder, and it becomes an HTTP endpoint. No manual route registration, no `build.rs`, no boilerplate.
+Astrea 把你的 **文件结构** 变成 **API 路由**——在编译时完成，零运行时开销。把一个 `.rs` 文件丢进 `src/routes/` 文件夹，它就变成了一个 HTTP 接口。不需要手动注册路由，不需要 `build.rs`，不需要模板代码。
 
-Every handler looks the same:
+每个处理函数长这样：
 
 ```rust
 #[route]
 async fn handler(event: Event) -> Result<Response> {
-    // your logic here
+    // 你的逻辑
 }
 ```
 
-That's it. No complex extractor signatures. No learning curve for each parameter type.
+就这样。不用记复杂的提取器签名，不用为每种参数类型学新语法。
 
-## Features
+## 特性
 
-- 📁 **File-based routing** — file name = route path, generated at compile time
-- 🎯 **Unified handler signature** — every handler is `async fn(Event) -> Result<Response>`
-- 🔧 **Simple extractors** — `get_param()`, `get_query_param()`, `get_body()` — just call a function
-- 🧅 **Scoped middleware** — `_middleware.rs` files with inherit (extend) or replace (override) modes
-- 📝 **OpenAPI auto-gen** — optional Swagger UI + OpenAPI 3.0 spec from your code (feature flag `openapi`)
-- 🔄 **Axum compatible** — works with all existing Axum middleware and the Tower ecosystem
-- 📦 **Zero extra deps** — re-exports `axum`, `tokio`, `serde`, `tower`, etc. — just depend on `astrea`
+- 📁 **基于文件的路由** — 文件名 = 路由路径，编译时自动生成
+- 🎯 **统一的处理函数签名** — 所有处理函数都是 `async fn(Event) -> Result<Response>`
+- 🔧 **简单的提取器** — `get_param()`、`get_query_param()`、`get_body()` — 调函数就行
+- 🧅 **作用域中间件** — `_middleware.rs` 文件支持叠加和覆盖两种模式
+- 📝 **自动生成 OpenAPI** — 可选的 Swagger UI + OpenAPI 3.0 规范（feature flag `openapi`）
+- 🔄 **兼容 Axum 生态** — 与所有现有 Axum 中间件和 Tower 生态无缝协作
+- 📦 **零额外依赖** — 自动 re-export `axum`、`tokio`、`serde`、`tower` 等，只需依赖 `astrea`
 
-## Quick Start
+## 快速开始
 
-### 1. Create a new project
+### 1. 创建项目
 
 ```bash
 cargo new my-api
 cd my-api
 ```
 
-### 2. Add Astrea
+### 2. 添加 Astrea
 
 ```bash
 cargo add astrea
 ```
 
-Or in `Cargo.toml`:
+或者在 `Cargo.toml` 里写：
 
 ```toml
 [package]
@@ -70,9 +70,9 @@ edition = "2024"
 astrea = "0.0.1"
 ```
 
-> **Note:** Astrea requires Rust edition 2024 (Rust ≥ 1.85).
+> **注意：** Astrea 需要 Rust edition 2024（Rust ≥ 1.85）。
 
-### 3. Create your route files
+### 3. 创建路由文件
 
 ```
 my-api/
@@ -109,7 +109,7 @@ pub async fn handler(event: Event) -> Result<Response> {
 }
 ```
 
-### 4. Write `main.rs`
+### 4. 写 `main.rs`
 
 ```rust
 mod routes {
@@ -125,13 +125,13 @@ async fn main() {
 }
 ```
 
-### 5. Run
+### 5. 运行
 
 ```bash
 cargo run
 ```
 
-Done. You will see a beautiful startup log:
+搞定。你会看到一个漂亮的启动日志：
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -147,56 +147,56 @@ Done. You will see a beautiful startup log:
 ✅ 4 route(s), 0 middleware scope(s) loaded
 ```
 
-And `GET http://localhost:3000/` returns `{"message":"Hello, World!"}`.
+访问 `GET http://localhost:3000/` 返回 `{"message":"Hello, World!"}`。
 
 ---
 
-## Route File Naming Convention
+## 路由文件命名规则
 
-| File name | Route |
+| 文件名 | 路由 |
 |---|---|
 | `src/routes/index.get.rs` | `GET /` |
 | `src/routes/users.get.rs` | `GET /users` |
 | `src/routes/users/index.post.rs` | `POST /users` |
 | `src/routes/users/[id].get.rs` | `GET /users/:id` |
 | `src/routes/users/[id].delete.rs` | `DELETE /users/:id` |
-| `src/routes/posts/[...slug].get.rs` | `GET /posts/*slug` (catch-all) |
+| `src/routes/posts/[...slug].get.rs` | `GET /posts/*slug`（全匹配） |
 
-**Rules:**
-- File name format: `<name>.<method>.rs`
-- `index` is a special name — it maps to the directory itself (no extra path segment)
-- `[param]` → dynamic path parameter
-- `[...param]` → catch-all parameter (matches everything after)
+**规则：**
+- 文件名格式：`<名称>.<HTTP方法>.rs`
+- `index` 是特殊名——它映射到目录本身（不会多一个路径段）
+- `[param]` → 动态路径参数
+- `[...param]` → 全匹配参数（匹配后面所有内容）
 
 ---
 
-## Extracting Request Data
+## 提取请求数据
 
-Astrea replaces complex Axum extractor signatures with simple function calls:
+Astrea 用简单的函数调用替代了 Axum 复杂的提取器签名：
 
 ```rust
 #[route]
 pub async fn handler(event: Event, bytes: Bytes) -> Result<Response> {
-    // Path parameters: /users/:id
+    // 路径参数: /users/:id
     let id = get_param(&event, "id");                   // Option<&str>
-    let id = get_param_required(&event, "id")?;          // &str (or 400 error)
+    let id = get_param_required(&event, "id")?;          // &str（缺少则返回 400）
 
-    // Query parameters: /search?q=rust&page=2
+    // 查询参数: /search?q=rust&page=2
     let q = get_query_param(&event, "q");                // Option<String>
     let all_query = get_query(&event);                   // &HashMap<String, String>
 
-    // Request body (JSON)
-    let body: MyStruct = get_body(&event, &bytes)?;      // deserialized struct
+    // 请求体（JSON）
+    let body: MyStruct = get_body(&event, &bytes)?;      // 反序列化后的结构体
 
-    // Headers
+    // 请求头
     let auth = get_header(&event, "authorization");      // Option<String>
 
-    // Metadata
+    // 元信息
     let method = get_method(&event);                     // &Method
     let path = get_path(&event);                         // &str
 
-    // Application state
-    let db = get_state::<DatabasePool>(&event)?;         // your custom state
+    // 应用状态
+    let db = get_state::<DatabasePool>(&event)?;         // 你的自定义状态
 
     json(json!({ "ok": true }))
 }
@@ -204,32 +204,32 @@ pub async fn handler(event: Event, bytes: Bytes) -> Result<Response> {
 
 ---
 
-## Response Helpers
+## 响应辅助函数
 
 ```rust
-// JSON (application/json)
+// JSON（application/json）
 json(json!({ "key": "value" }))?
 
-// Plain text (text/plain)
+// 纯文本（text/plain）
 text("Hello!")
 
-// HTML (text/html)
+// HTML（text/html）
 html("<h1>Hello</h1>")
 
-// Redirect (302 Found)
+// 重定向（302 Found）
 redirect("/login")?
 
-// No Content (204)
+// 无内容（204 No Content）
 no_content()
 
-// Raw bytes
+// 原始字节
 bytes(vec![0x89, 0x50, 0x4E, 0x47]).content_type("image/png")
 
-// Streaming
+// 流式响应
 stream(Body::from_stream(my_stream))
 ```
 
-All responses support chaining:
+所有响应都支持链式调用：
 
 ```rust
 json(data)?
@@ -239,29 +239,29 @@ json(data)?
 
 ---
 
-## Error Handling
+## 错误处理
 
-Return errors naturally — they become proper HTTP responses automatically:
+自然地返回错误——它们会自动变成合适的 HTTP 响应：
 
 ```rust
 #[route]
 pub async fn handler(event: Event) -> Result<Response> {
-    let id = get_param_required(&event, "id")?;       // 400 if missing
+    let id = get_param_required(&event, "id")?;       // 缺少则返回 400
 
     if id == "0" {
-        return Err(RouteError::not_found("User not found"));  // 404
+        return Err(RouteError::not_found("用户不存在"));  // 404
     }
 
-    // Third-party errors auto-convert to 500 via anyhow
+    // 第三方错误通过 anyhow 自动转换为 500
     let data = some_fallible_operation()?;
 
     json(data)
 }
 ```
 
-Built-in error variants:
+内置错误变体：
 
-| Method | Status Code |
+| 方法 | 状态码 |
 |---|---|
 | `RouteError::bad_request(msg)` | 400 |
 | `RouteError::unauthorized(msg)` | 401 |
@@ -270,29 +270,29 @@ Built-in error variants:
 | `RouteError::conflict(msg)` | 409 |
 | `RouteError::validation(msg)` | 422 |
 | `RouteError::rate_limit(msg)` | 429 |
-| `RouteError::custom(StatusCode, msg)` | any |
-| `?` on any `anyhow`-compatible error | 500 |
+| `RouteError::custom(StatusCode, msg)` | 任意 |
+| 对任何兼容 `anyhow` 的错误使用 `?` | 500 |
 
-All errors are returned as JSON: `{"error": "...", "status": 404}`.
+所有错误以 JSON 格式返回：`{"error": "...", "status": 404}`。
 
 ---
 
-## Middleware
+## 中间件
 
-Create `_middleware.rs` files anywhere in the `src/routes/` directory. They scope to the folder they live in + all subfolders.
+在 `src/routes/` 目录的任意位置创建 `_middleware.rs` 文件。它的作用范围是所在文件夹 + 所有子文件夹。
 
 ```
 src/routes/
-├── _middleware.rs            # applies to ALL routes
+├── _middleware.rs            # 作用于所有路由
 ├── api/
-│   ├── _middleware.rs        # applies to /api/* (stacks on root)
-│   ├── users.get.rs          # ← root + api middleware
+│   ├── _middleware.rs        # 作用于 /api/*（叠加在根中间件上）
+│   ├── users.get.rs          # ← 根 + api 中间件
 │   └── public/
-│       ├── _middleware.rs    # OVERRIDES parent middleware
-│       └── health.get.rs    # ← public middleware only
+│       ├── _middleware.rs    # 覆盖父中间件
+│       └── health.get.rs    # ← 仅 public 中间件
 ```
 
-### Extend mode (default) — stack on parent
+### 叠加模式（默认）— 在父中间件之上叠加
 
 ```rust
 // src/routes/_middleware.rs
@@ -308,7 +308,7 @@ pub fn middleware() -> Middleware {
 }
 ```
 
-### Override mode — replace parent middleware
+### 覆盖模式 — 替换父中间件
 
 ```rust
 // src/routes/api/public/_middleware.rs
@@ -324,31 +324,31 @@ pub fn middleware() -> Middleware {
 
 ---
 
-## OpenAPI (Optional)
+## OpenAPI（可选）
 
-Enable the `openapi` feature to get automatic API documentation:
+启用 `openapi` feature 自动生成 API 文档：
 
 ```toml
 [dependencies]
 astrea = { version = "0.0.1", features = ["openapi"] }
 ```
 
-Then merge the OpenAPI router:
+然后合并 OpenAPI 路由：
 
 ```rust
 let app = routes::create_router()
     .merge(astrea::openapi::router("My API", "1.0.0"));
 ```
 
-This gives you:
-- `GET /openapi.json` — the OpenAPI 3.0 spec
-- `GET /swagger` — Swagger UI
+这会给你：
+- `GET /openapi.json` — OpenAPI 3.0 规范
+- `GET /swagger` — Swagger UI 页面
 
 ---
 
-## Application State
+## 应用状态
 
-Share state across handlers (database pools, config, etc.):
+在处理函数间共享状态（数据库连接池、配置等）：
 
 ```rust
 #[derive(Clone)]
@@ -356,17 +356,17 @@ struct AppState {
     db: DatabasePool,
 }
 
-// In handler:
+// 在处理函数中：
 #[route]
 pub async fn handler(event: Event) -> Result<Response> {
     let state = get_state::<AppState>(&event)?;
-    // use state.db ...
+    // 使用 state.db ...
 }
 ```
 
 ---
 
-## Full Example
+## 完整示例
 
 ```
 my-api/
@@ -386,35 +386,35 @@ my-api/
                 └── [id].delete.rs
 ```
 
-This generates:
-- `GET /` — root page
-- `GET /api/users` — list users
-- `POST /api/users` — create user
-- `GET /api/users/:id` — get user by ID
-- `PUT /api/users/:id` — update user
-- `DELETE /api/users/:id` — delete user
+这会生成：
+- `GET /` — 根页面
+- `GET /api/users` — 获取用户列表
+- `POST /api/users` — 创建用户
+- `GET /api/users/:id` — 获取单个用户
+- `PUT /api/users/:id` — 更新用户
+- `DELETE /api/users/:id` — 删除用户
 
-Root middleware → all routes. API middleware → `/api/*` routes.
+根中间件 → 所有路由。API 中间件 → `/api/*` 路由。
 
 ---
 
-## Why Astrea?
+## 为什么选择 Astrea？
 
-| | Astrea | Plain Axum |
+| | Astrea | 原生 Axum |
 |---|---|---|
-| **Route definition** | Drop a file | Manual `.route()` calls |
-| **Handler signature** | Always `(Event) -> Result<Response>` | Varies per extractor combo |
-| **Parameter access** | `get_param(&event, "id")` | `Path(id): Path<String>` |
-| **Error handling** | Built-in JSON errors | DIY |
-| **Middleware** | File-based scoping | Manual nesting |
-| **OpenAPI** | Auto-generated | Manual or third-party |
+| **路由定义** | 放一个文件 | 手动写 `.route()` |
+| **处理函数签名** | 永远是 `(Event) -> Result<Response>` | 随提取器组合变化 |
+| **参数访问** | `get_param(&event, "id")` | `Path(id): Path<String>` |
+| **错误处理** | 内置 JSON 错误响应 | 自己实现 |
+| **中间件** | 基于文件的作用域 | 手动嵌套 |
+| **OpenAPI** | 自动生成 | 手动写或用第三方库 |
 
 ---
 
-## Minimum Supported Rust Version
+## 最低支持 Rust 版本
 
-Rust **1.85** or later (edition 2024).
+Rust **1.85** 或更高版本（edition 2024）。
 
-## License
+## 许可证
 
 MIT © [TNXG (Asahi Shiori)](https://github.com/TNXG)

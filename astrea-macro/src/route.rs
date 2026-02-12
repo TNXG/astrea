@@ -40,6 +40,20 @@ pub fn impl_route(_args: TokenStream, input: TokenStream) -> TokenStream {
     let event_name = event_param_name
         .unwrap_or_else(|| syn::Ident::new("event", proc_macro2::Span::call_site()));
 
+    // 生成 OpenAPI 元数据函数（仅当启用 openapi feature 时）
+    // Generate OpenAPI metadata function (only when openapi feature is enabled)
+    #[cfg(feature = "openapi")]
+    let openapi_fn = {
+        let meta_tokens = crate::openapi::analyze_handler(&input_fn);
+        quote! {
+            pub fn __openapi_meta() -> ::astrea::openapi::HandlerMeta {
+                #meta_tokens
+            }
+        }
+    };
+    #[cfg(not(feature = "openapi"))]
+    let openapi_fn = quote! {};
+
     // 生成包装函数 — 所有外部类型通过 ::astrea:: 引用，用户无需直接依赖 axum / bytes
     // Generate wrapper function - all external types referenced via ::astrea::
     let expanded = quote! {
@@ -65,13 +79,16 @@ pub fn impl_route(_args: TokenStream, input: TokenStream) -> TokenStream {
                 __query_params.0,
             );
 
-            let result = #block;
+            let result: ::std::result::Result<::astrea::Response, ::astrea::RouteError> =
+                async move #block.await;
 
             match result {
                 Ok(response) => response.into_axum_response(),
                 Err(error) => error.into_response(),
             }
         }
+
+        #openapi_fn
     };
 
     TokenStream::from(expanded)

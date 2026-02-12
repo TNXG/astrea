@@ -30,7 +30,7 @@ tracing = "0.1"
 tower-http = { version = "0.6.8", features = ["cors", "trace", "compression-br", "compression-gzip"] }
 
 # Macro dependencies / 宏依赖
-syn = { version = "2.0", features = ["full", "extra-traits"] }
+syn = { version = "2.0.115", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 
@@ -55,6 +55,9 @@ keywords = ["axum", "router", "web", "framework", "filesystem"]
 categories = ["web-programming::http-server", "development-tools::build-utils"]
 rust-version = "1.85"
 
+[features]
+openapi = ["astrea-macro/openapi"]
+
 [dependencies]
 anyhow = { workspace = true }
 astrea-macro = { workspace = true }
@@ -72,6 +75,7 @@ tokio = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }
 tower-http = { workspace = true }
+comfy-table = "7.2.2"
 
 [dev-dependencies]
 criterion = { workspace = true }

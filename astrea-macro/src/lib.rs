@@ -26,6 +26,8 @@
 //! ```
 
 mod codegen;
+#[cfg(feature = "openapi")]
+mod openapi;
 mod parser;
 mod route;
 mod scanner;

@@ -3,9 +3,7 @@
 //! / 响应构建器函数
 
 use crate::error::{Result, RouteError};
-use axum::{
-    http::{HeaderMap, HeaderValue, StatusCode, header},
-};
+use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
 use serde::Serialize;
 
 use super::Response;
