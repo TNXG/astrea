@@ -83,7 +83,7 @@ pub fn impl_route(_args: TokenStream, input: TokenStream) -> TokenStream {
                 __query_params.0,
                 __body_bytes,
             );
-            
+
             // 注入状态 / Inject state
             #event_name.state = Some(::std::sync::Arc::new(__state) as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>);
 

@@ -25,5 +25,5 @@ pub async fn handler(event: Event) -> Result<Response> {
         "updated_at": "2025-01-15T11:00:00Z"
     });
 
-    Ok(json(user)?)
+    json(user)
 }

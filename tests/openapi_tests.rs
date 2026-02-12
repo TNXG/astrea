@@ -235,7 +235,7 @@ fn test_request_body_detection() {
         /// @response 409 Email already exists
         #[route]
         pub async fn create_user_handler(event: Event) -> Result<Response> {
-            let body: CreateUserRequest = get_body(&event)?;;
+            let body: CreateUserRequest = get_body(&event)?;
             json(json!({
                 "username": body.username,
                 "email": body.email,

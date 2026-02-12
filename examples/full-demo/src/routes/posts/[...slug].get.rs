@@ -10,12 +10,12 @@ pub async fn handler(event: Event) -> Result<Response> {
     // slug 会包含完整的路径片段，例如 "2024/01/hello-world"
     let parts: Vec<&str> = slug.split('/').collect();
 
-    Ok(json(json!({
+    json(json!({
         "slug": slug,
         "parts": parts,
-        "year": parts.get(0),
+        "year": parts.first(),
         "month": parts.get(1),
         "post_name": parts.get(2),
         "message": format!("This is a catch-all route matching: /posts/{}", slug)
-    }))?)
+    }))
 }

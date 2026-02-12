@@ -28,7 +28,7 @@ pub fn parse_route_file(
     path_components: &[String],
 ) -> Option<ScannedRoute> {
     let name_without_ext = file_name.strip_suffix(".rs")?;
-    
+
     // Handle dynamic routes: split by the last dot before method
     // 处理动态路由：在方法前的最后一个点分割
     let (route_name, method_str) = if let Some(pos) = name_without_ext.rfind('.') {

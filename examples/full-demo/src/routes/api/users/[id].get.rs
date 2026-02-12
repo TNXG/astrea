@@ -32,7 +32,7 @@ pub async fn handler(event: Event) -> Result<Response> {
     }
 
     // 模拟数据库查询
-    let user = match &*id {
+    let user = match id {
         "1" => Some(json!({
             "id": 1,
             "name": "Alice",
