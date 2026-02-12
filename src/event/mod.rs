@@ -48,40 +48,14 @@
 //! }
 //! ```
 
-use crate::error::{Result, RouteError};
 use axum::http::{HeaderMap, Method, Uri};
-use once_cell::sync::OnceCell;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
+use std::sync::Arc;
 
-/// Inner event data shared via Arc
-///
-/// / 通过 Arc 共享的内部事件数据
-///
-/// This struct is separated to allow efficient cloning of `Event` while
-/// sharing the parsed data.
-///
-/// 此结构体被分离以便在共享解析数据时高效克隆 `Event`。
-#[derive(Debug)]
-pub struct EventInner {
-    /// HTTP method
-    /// / HTTP 方法
-    pub method: Method,
-    /// Request path
-    /// / 请求路径
-    pub path: String,
-    /// Original URI for query parsing
-    /// / 用于查询解析的原始 URI
-    pub raw_uri: Uri,
-    /// Request headers
-    /// / 请求头
-    pub headers: HeaderMap,
-    /// Lazy cached path parameters
-    /// / 延迟缓存的路径参数
-    pub params: OnceCell<HashMap<String, String>>,
-    /// Lazy cached query parameters
-    /// / 延迟缓存的查询参数
-    pub query: OnceCell<HashMap<String, String>>,
-}
+pub mod inner;
+pub mod parse;
+
+pub use inner::EventInner;
 
 /// Request event containing all request information
 ///
@@ -145,14 +119,7 @@ impl Event {
         params: HashMap<String, String>,
         query: HashMap<String, String>,
     ) -> Self {
-        let inner = EventInner {
-            method,
-            path,
-            raw_uri,
-            headers,
-            params: OnceCell::from(params),
-            query: OnceCell::from(query),
-        };
+        let inner = EventInner::new(method, path, raw_uri, headers, params, query);
 
         Self {
             inner: Arc::new(inner),
@@ -175,7 +142,7 @@ impl Event {
     /// ```
     #[must_use]
     pub fn method(&self) -> &Method {
-        &self.inner.method
+        self.inner.method()
     }
 
     /// Get the request path
@@ -195,7 +162,7 @@ impl Event {
     /// ```
     #[must_use]
     pub fn path(&self) -> &str {
-        &self.inner.path
+        self.inner.path()
     }
 
     /// Get the original URI
@@ -207,7 +174,7 @@ impl Event {
     /// 返回完整的 URI，包括路径和查询字符串。
     #[must_use]
     pub fn uri(&self) -> &Uri {
-        &self.inner.raw_uri
+        self.inner.uri()
     }
 
     /// Get request headers
@@ -219,7 +186,7 @@ impl Event {
     /// 返回完整请求头的引用。
     #[must_use]
     pub fn headers(&self) -> &HeaderMap {
-        &self.inner.headers
+        self.inner.headers()
     }
 
     /// Get path parameters (lazy cached)
@@ -237,7 +204,7 @@ impl Event {
     /// 或 [`get_param_required`](crate::extract::get_param_required)。
     #[must_use]
     pub fn params(&self) -> &HashMap<String, String> {
-        self.inner.params.get_or_init(HashMap::new)
+        self.inner.params()
     }
 
     /// Get query parameters (lazy cached)
@@ -255,13 +222,7 @@ impl Event {
     /// 或 [`get_query_param`](crate::extract::get_query_param)。
     #[must_use]
     pub fn query(&self) -> &HashMap<String, String> {
-        self.inner.query.get_or_init(|| {
-            self.inner
-                .raw_uri
-                .query()
-                .map(|q| serde_urlencoded::from_str(q).unwrap_or_else(|_| HashMap::new()))
-                .unwrap_or_default()
-        })
+        self.inner.query()
     }
 
     /// Get a value from the application state
@@ -334,9 +295,8 @@ impl Event {
     ///     json(json!({ "message": format!("User {} created", body.name) }))
     /// }
     /// ```
-    pub fn parse_json<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> Result<T> {
-        serde_json::from_slice(bytes)
-            .map_err(|e| RouteError::bad_request(format!("Invalid JSON: {e}")))
+    pub fn parse_json<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> crate::error::Result<T> {
+        self.inner.parse_json(bytes)
     }
 
     /// Parse form data from bytes
@@ -372,10 +332,8 @@ impl Event {
     ///     // Process login...
     /// }
     /// ```
-    pub fn parse_form<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> Result<T> {
-        let text = self.parse_text(bytes)?;
-        serde_urlencoded::from_str(&text)
-            .map_err(|e| RouteError::bad_request(format!("Invalid form data: {e}")))
+    pub fn parse_form<T: serde::de::DeserializeOwned>(&self, bytes: &[u8]) -> crate::error::Result<T> {
+        self.inner.parse_form(bytes)
     }
 
     /// Parse text body from bytes
@@ -393,9 +351,7 @@ impl Event {
     /// Returns `RouteError::BadRequest` if the body is not valid UTF-8.
     ///
     /// 如果请求体不是有效的 UTF-8，返回 `RouteError::BadRequest`。
-    pub fn parse_text(&self, bytes: &[u8]) -> Result<String> {
-        std::str::from_utf8(bytes)
-            .map(std::string::ToString::to_string)
-            .map_err(|e| RouteError::bad_request(format!("Invalid UTF-8: {e}")))
+    pub fn parse_text(&self, bytes: &[u8]) -> crate::error::Result<String> {
+        self.inner.parse_text(bytes)
     }
 }

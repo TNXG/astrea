@@ -28,6 +28,7 @@ jobs:
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
           sed -i "s/astrea-macro = { version = \".*\", path/astrea-macro = { version = \"$VERSION\", path/" Cargo.toml
+          cargo update -w
 
       - uses: dtolnay/rust-toolchain@stable
 

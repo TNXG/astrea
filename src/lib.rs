@@ -142,7 +142,7 @@ pub mod prelude {
     pub use crate::event::Event;
     pub use crate::extract::*;
     pub use crate::middleware::{Middleware, MiddlewareMode};
-    pub use crate::response::{Response, html, json, no_content, redirect, text};
+    pub use crate::response::{Response, bytes, html, json, no_content, redirect, text};
 
     // Re-export common Axum types
     // Re-export 常用 Axum 类型
