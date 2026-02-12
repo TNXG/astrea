@@ -22,6 +22,7 @@ fn create_event_with_params() -> Event {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     )
 }
 
@@ -34,6 +35,7 @@ fn create_event_with_query() -> Event {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     )
 }
 
@@ -51,6 +53,7 @@ fn create_event_with_headers() -> Event {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     )
 }
 
@@ -124,6 +127,7 @@ fn bench_get_query_param(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         group.bench_with_input(
@@ -183,15 +187,6 @@ fn bench_get_headers(c: &mut Criterion) {
 fn bench_get_body(c: &mut Criterion) {
     let mut group = c.benchmark_group("get_body");
 
-    let event = Event::new(
-        Method::POST,
-        "/api/users".to_string(),
-        "/api/users".parse().unwrap(),
-        HeaderMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-    );
-
     #[derive(serde::Deserialize)]
     #[allow(dead_code)]
     struct CreateUserRequest {
@@ -201,22 +196,35 @@ fn bench_get_body(c: &mut Criterion) {
     }
 
     let small_body = br#"{"name":"Alice","email":"alice@example.com","age":30}"#;
+    let event = Event::new(
+        Method::POST,
+        "/api/users".to_string(),
+        "/api/users".parse().unwrap(),
+        HeaderMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        bytes::Bytes::from_static(small_body),
+    );
 
     group.bench_function("parse_small_json", |b| {
-        b.iter(|| black_box(get_body::<CreateUserRequest>(black_box(&event), small_body)));
+        b.iter(|| black_box(get_body::<CreateUserRequest>(black_box(&event))));
     });
 
     // 测试不同大小的 JSON body
     for size in &[10, 100, 1000] {
         let json_body = format!(r#"{{"data":"{}"}}"#, "x".repeat(*size));
+        let event = Event::new(
+            Method::POST,
+            "/api/users".to_string(),
+            "/api/users".parse().unwrap(),
+            HeaderMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            bytes::Bytes::from(json_body),
+        );
 
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
-            b.iter(|| {
-                black_box(get_body::<serde_json::Value>(
-                    black_box(&event),
-                    json_body.as_bytes(),
-                ))
-            });
+            b.iter(|| black_box(get_body::<serde_json::Value>(black_box(&event))));
         });
     }
 
@@ -226,6 +234,7 @@ fn bench_get_body(c: &mut Criterion) {
 fn bench_get_body_text(c: &mut Criterion) {
     let mut group = c.benchmark_group("get_body_text");
 
+    let text = "Hello, World!";
     let event = Event::new(
         Method::POST,
         "/api/text".to_string(),
@@ -233,18 +242,27 @@ fn bench_get_body_text(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from(text.as_bytes().to_vec()),
     );
 
     group.bench_function("short_text", |b| {
-        let text = "Hello, World!";
-        b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())));
+        b.iter(|| black_box(get_body_text(black_box(&event))));
     });
 
     for size in &[100, 1000, 10000] {
         group.throughput(Throughput::Bytes(*size as u64));
-        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
-            let text = "a".repeat(*size);
-            b.iter(|| black_box(get_body_text(black_box(&event), text.as_bytes())));
+        let text = "a".repeat(*size);
+        let event = Event::new(
+            Method::POST,
+            "/api/text".to_string(),
+            "/api/text".parse().unwrap(),
+            HeaderMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            bytes::Bytes::from(text),
+        );
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
+            b.iter(|| black_box(get_body_text(black_box(&event))));
         });
     }
 
@@ -254,6 +272,7 @@ fn bench_get_body_text(c: &mut Criterion) {
 fn bench_get_body_bytes(c: &mut Criterion) {
     let mut group = c.benchmark_group("get_body_bytes");
 
+    let data = b"raw data";
     let event = Event::new(
         Method::POST,
         "/api/data".to_string(),
@@ -261,11 +280,11 @@ fn bench_get_body_bytes(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from_static(data),
     );
 
     group.bench_function("get_bytes", |b| {
-        let bytes = b"raw data";
-        b.iter(|| black_box(get_body_bytes(black_box(&event), bytes)));
+        b.iter(|| black_box(get_body_bytes(black_box(&event))));
     });
 
     group.finish();
@@ -281,6 +300,7 @@ fn bench_get_method(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("get_http_method", |b| {
@@ -300,6 +320,7 @@ fn bench_get_path(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("get_request_path", |b| {
@@ -319,6 +340,7 @@ fn bench_get_uri(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("get_request_uri", |b| {
@@ -345,6 +367,7 @@ fn bench_combined_extract(c: &mut Criterion) {
         headers,
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("extract_multiple_fields", |b| {

@@ -90,6 +90,9 @@ pub struct Event {
     /// Application state (type-erased, stored as Arc<dyn Any + Send + Sync>)
     /// / 应用状态（类型擦除，存储为 Arc<dyn Any + Send + Sync>）
     pub state: Option<std::sync::Arc<dyn std::any::Any + Send + Sync>>,
+    /// Request body bytes
+    /// / 请求体字节数据
+    pub body: bytes::Bytes,
 }
 
 impl Event {
@@ -111,6 +114,7 @@ impl Event {
     /// - `headers` - Request headers / 请求头
     /// - `params` - Path parameters / 路径参数
     /// - `query` - Query parameters / 查询参数
+    /// - `body` - Request body bytes / 请求体字节数据
     pub fn new(
         method: Method,
         path: String,
@@ -118,12 +122,14 @@ impl Event {
         headers: HeaderMap,
         params: HashMap<String, String>,
         query: HashMap<String, String>,
+        body: bytes::Bytes,
     ) -> Self {
         let inner = EventInner::new(method, path, raw_uri, headers, params, query);
 
         Self {
             inner: Arc::new(inner),
             state: None,
+            body,
         }
     }
 

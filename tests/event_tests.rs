@@ -19,6 +19,7 @@ fn test_event_creation() {
         headers,
         params,
         query,
+        bytes::Bytes::new(),
     );
 
     assert_eq!(event.method(), &Method::GET);
@@ -38,6 +39,7 @@ fn test_event_with_params() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let params = event.params();
@@ -63,6 +65,7 @@ fn test_event_query_params_from_uri() {
         HeaderMap::new(),
         HashMap::new(),
         parsed_query,
+        bytes::Bytes::new(),
     );
 
     let query = event.query();
@@ -84,6 +87,7 @@ fn test_event_with_preloaded_query() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let query_params = event.query();
@@ -105,6 +109,7 @@ fn test_event_headers() {
         headers.clone(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let event_headers = event.headers();
@@ -130,6 +135,7 @@ fn test_event_uri() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(event.uri(), &uri);
@@ -157,6 +163,7 @@ fn test_event_method_types() {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         assert_eq!(event.method(), &method);
@@ -172,6 +179,7 @@ fn test_event_parse_json_valid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(serde::Deserialize, PartialEq, Debug)]
@@ -196,6 +204,7 @@ fn test_event_parse_json_invalid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(serde::Deserialize)]
@@ -225,6 +234,7 @@ fn test_event_parse_text_valid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let text_bytes = b"Hello, Astrea!";
@@ -242,6 +252,7 @@ fn test_event_parse_text_invalid_utf8() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let invalid_utf8 = &[0xFF, 0xFE, 0xFD]; // Invalid UTF-8 bytes
@@ -265,6 +276,7 @@ fn test_event_parse_form_valid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(serde::Deserialize, PartialEq, Debug)]
@@ -289,6 +301,7 @@ fn test_event_parse_form_invalid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(serde::Deserialize)]
@@ -323,6 +336,7 @@ fn test_event_state() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     event.state = Some(Arc::new(state.clone()));
@@ -340,6 +354,7 @@ fn test_event_state_none() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(Clone)]
@@ -375,6 +390,7 @@ fn test_event_state_wrong_type() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     event.state = Some(Arc::new(state));
@@ -396,6 +412,7 @@ fn test_event_clone() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let event2 = event1.clone();
@@ -416,6 +433,7 @@ fn test_event_empty_query_string() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let query = event.query();
@@ -437,6 +455,7 @@ fn test_event_complex_query_params() {
         HeaderMap::new(),
         HashMap::new(),
         parsed_query,
+        bytes::Bytes::new(),
     );
 
     let query = event.query();

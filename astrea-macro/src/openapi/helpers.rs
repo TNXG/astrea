@@ -223,7 +223,7 @@ pub fn is_get_body_call(expr: &Expr) -> bool {
             }
             false
         }
-        // Handle: get_body(&event, &bytes)?
+        // Handle: get_body(&event)?
         Expr::Try(t) => is_get_body_call(&t.expr),
         // Handle: (get_body(...))
         Expr::Paren(p) => is_get_body_call(&p.expr),

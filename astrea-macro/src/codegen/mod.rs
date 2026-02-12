@@ -89,7 +89,7 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
             let mod_ident = Ident::new(&m.module_name, Span::call_site());
             quote! {
                 {
-                    let __probe = #mod_ident::middleware();
+                    let __probe = #mod_ident::middleware::<S>();
                     if __probe.mode == ::astrea::middleware::MiddlewareMode::Override {
                         "override"
                     } else {
@@ -150,16 +150,17 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
 
         /// Create a Router with all file-based routes and middleware
         /// / 创建包含所有文件路由和中间件的 Router
-        pub fn create_router() -> ::astrea::axum::Router {
-            // ── TUI Logging with comfy-table ──
-            // ── 使用 comfy-table 进行 TUI 日志输出 ──
+        pub fn create_router<S: Clone + Send + Sync + 'static>() -> ::astrea::axum::Router<S> {
+            // ── TUI Logging with comfy_table ──
+            // ── 使用 comfy_table 进行 TUI 日志输出 ──
             {
-                use::comfy_table::{Table, Row, Cell, presets, Attribute, CellAlignment, ContentArrangement};
+                use::astrea::comfy_table::{Table, Row, Cell, presets, Attribute, CellAlignment, ContentArrangement};
 
                 // 1. 构建路由表 (Routes Table)
                 let mut table = Table::new();
                 table.load_preset(presets::UTF8_FULL);
                 table.set_content_arrangement(ContentArrangement::Dynamic);
+                table.force_no_tty(); // 禁用 ANSI 颜色代码
 
                 // 标题行 / Title Row
                 let mut title_row = Row::new();
@@ -167,7 +168,7 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
                     Cell::new("🚀 Astrea Router")
                         .add_attribute(Attribute::Bold)
                         .set_alignment(CellAlignment::Center)
-                        .set_col_span(3) // 跨越3列
+
                 );
                 table.add_row(title_row);
 
@@ -205,6 +206,7 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
                     let mut mw_table = Table::new();
                     mw_table.load_preset(presets::UTF8_FULL);
                     mw_table.set_content_arrangement(ContentArrangement::Dynamic);
+                    mw_table.force_no_tty(); // 禁用 ANSI 颜色代码
 
                     // 中间件标题 / Middleware Title
                     let mut mw_title_row = Row::new();
@@ -212,7 +214,6 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
                         Cell::new("📦 Middleware Scopes")
                             .add_attribute(Attribute::Bold)
                             .set_alignment(CellAlignment::Center)
-                            .set_col_span(3)
                     );
                     mw_table.add_row(mw_title_row);
 

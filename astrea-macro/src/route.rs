@@ -57,27 +57,35 @@ pub fn impl_route(_args: TokenStream, input: TokenStream) -> TokenStream {
     // 生成包装函数 — 所有外部类型通过 ::astrea:: 引用，用户无需直接依赖 axum / bytes
     // Generate wrapper function - all external types referenced via ::astrea::
     let expanded = quote! {
-        #vis async fn #fn_name(
+        #vis async fn #fn_name<S>(
+            ::astrea::axum::extract::State(__state): ::astrea::axum::extract::State<S>,
             __method: ::astrea::axum::http::Method,
             __uri: ::astrea::axum::http::Uri,
             __headers: ::astrea::axum::http::HeaderMap,
             __path_params: ::astrea::axum::extract::Path<std::collections::HashMap<String, String>>,
             __query_params: ::astrea::axum::extract::Query<std::collections::HashMap<String, String>>,
             __body_bytes: ::astrea::bytes::Bytes,
-        ) -> impl ::astrea::axum::response::IntoResponse {
+        ) -> impl ::astrea::axum::response::IntoResponse
+        where
+            S: Clone + Send + Sync + 'static,
+        {
             use ::astrea::{Event, Response};
             use ::astrea::axum::response::IntoResponse;
 
             let __path = __uri.path().to_string();
 
-            let #event_name = Event::new(
+            let mut #event_name = Event::new(
                 __method,
                 __path,
                 __uri,
                 __headers,
                 __path_params.0,
                 __query_params.0,
+                __body_bytes,
             );
+            
+            // 注入状态 / Inject state
+            #event_name.state = Some(::std::sync::Arc::new(__state) as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>);
 
             let result: ::std::result::Result<::astrea::Response, ::astrea::RouteError> =
                 async move #block.await;

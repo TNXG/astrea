@@ -28,19 +28,28 @@ pub fn parse_route_file(
     path_components: &[String],
 ) -> Option<ScannedRoute> {
     let name_without_ext = file_name.strip_suffix(".rs")?;
-    let parts: Vec<&str> = name_without_ext.split('.').collect();
+    
+    // Handle dynamic routes: split by the last dot before method
+    // 处理动态路由：在方法前的最后一个点分割
+    let (route_name, method_str) = if let Some(pos) = name_without_ext.rfind('.') {
+        let name = &name_without_ext[..pos];
+        let method = &name_without_ext[pos + 1..];
+        (name, Some(method))
+    } else {
+        (name_without_ext, None)
+    };
 
-    let is_index = parts[0] == "index";
+    let is_index = route_name == "index";
 
     // Determine HTTP method
     // 确定 HTTP 方法
-    let method = if is_index && parts.len() == 1 {
+    let method = if is_index && method_str.is_none() {
         // index.rs → default GET
         "GET".to_string()
-    } else if parts.len() >= 2 {
-        // name.get.rs / index.post.rs → take last segment
-        // name.get.rs / index.post.rs → 取最后一段
-        parts[parts.len() - 1].to_uppercase()
+    } else if let Some(m) = method_str {
+        // name.get.rs / index.post.rs → take method part
+        // name.get.rs / index.post.rs → 取方法部分
+        m.to_uppercase()
     } else {
         return None;
     };
@@ -49,7 +58,7 @@ pub fn parse_route_file(
     // 构建路由路径
     let mut route_path = path_components.to_vec();
     if !is_index {
-        route_path.push(parts[0].to_string());
+        route_path.push(route_name.to_string());
     }
 
     // Convert to Axum 0.8 route format

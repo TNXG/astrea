@@ -108,8 +108,6 @@
 //! }
 //! ```
 
-use axum::Router;
-
 // ============================================================================
 // MiddlewareMode
 // ============================================================================
@@ -177,23 +175,23 @@ pub enum MiddlewareMode {
 ///         })
 /// }
 /// ```
-pub struct Middleware {
+pub struct Middleware<S = ()> {
     /// How this middleware interacts with parent middleware
     /// / 此中间件与父中间件的交互方式
     pub mode: MiddlewareMode,
 
     /// Function that wraps a Router with middleware layers
     /// / 将中间件层应用到路由器的函数
-    wrapper: Option<Box<dyn FnOnce(Router) -> Router>>,
+    wrapper: Option<Box<dyn FnOnce(axum::Router<S>) -> axum::Router<S>>>,
 }
 
-impl Default for Middleware {
+impl<S> Default for Middleware<S> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Middleware {
+impl<S> Middleware<S> {
     /// Create a new middleware configuration with Extend mode (叠加)
     ///
     /// / 创建一个新的中间件配置，默认叠加模式
@@ -281,7 +279,7 @@ impl Middleware {
     #[must_use]
     pub fn wrap<F>(mut self, f: F) -> Self
     where
-        F: FnOnce(Router) -> Router + 'static,
+        F: FnOnce(axum::Router<S>) -> axum::Router<S> + 'static,
     {
         self.wrapper = Some(Box::new(f));
         self
@@ -295,7 +293,7 @@ impl Middleware {
     /// You typically don't need to call it directly.
     ///
     /// 由生成的 `create_router()` 代码调用。通常不需要直接调用。
-    pub fn apply(self, router: Router) -> Router {
+    pub fn apply(self, router: axum::Router<S>) -> axum::Router<S> {
         match self.wrapper {
             Some(f) => f(router),
             None => router,
@@ -303,7 +301,7 @@ impl Middleware {
     }
 }
 
-impl std::fmt::Debug for Middleware {
+impl<S> std::fmt::Debug for Middleware<S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Middleware")
             .field("mode", &self.mode)

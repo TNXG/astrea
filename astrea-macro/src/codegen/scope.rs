@@ -78,7 +78,7 @@ pub fn generate_scope_code(
             let method_fn = Ident::new(&r.method.to_lowercase(), proc_macro2::Span::call_site());
             let mod_name = Ident::new(&r.module_name, proc_macro2::Span::call_site());
             quote! {
-                .route(#axum_path, ::astrea::axum::routing::#method_fn(#mod_name::handler))
+                .route(#axum_path, ::astrea::axum::routing::#method_fn(#mod_name::handler::<S>))
             }
         })
         .collect();
@@ -100,7 +100,7 @@ pub fn generate_scope_code(
         child_blocks.push(quote! {
             {
                 let __inner = #child_router_expr;
-                let __mw = #child_mw_mod::middleware();
+                let __mw = #child_mw_mod::middleware::<S>();
                 let __mode = __mw.mode;
                 let __built = __mw.apply(__inner);
                 (__mode, __built)

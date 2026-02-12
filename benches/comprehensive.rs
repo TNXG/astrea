@@ -53,8 +53,8 @@ struct CreateUserRequest {
     password: String,
 }
 
-fn simulate_create_user_handler(event: &Event, body_bytes: &[u8]) -> Result<Response> {
-    let body: CreateUserRequest = get_body(event, body_bytes)?;
+fn simulate_create_user_handler(event: &Event) -> Result<Response> {
+    let body: CreateUserRequest = get_body(event)?;
 
     json(serde_json::json!({
         "id": 123,
@@ -85,6 +85,7 @@ fn bench_user_list_scenario(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("handle_user_list", |b| {
@@ -107,6 +108,7 @@ fn bench_user_detail_scenario(c: &mut Criterion) {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("handle_user_detail", |b| {
@@ -126,12 +128,11 @@ fn bench_create_user_scenario(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
-    let body = br#"{"name":"Alice","email":"alice@example.com","password":"secret123"}"#;
-
     group.bench_function("handle_create_user", |b| {
-        b.iter(|| black_box(simulate_create_user_handler(black_box(&event), body)));
+        b.iter(|| black_box(simulate_create_user_handler(black_box(&event))));
     });
 
     group.finish();
@@ -150,6 +151,7 @@ fn bench_authenticated_request_scenario(c: &mut Criterion) {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("handle_authenticated", |b| {
@@ -175,6 +177,7 @@ fn bench_full_request_lifecycle(c: &mut Criterion) {
                 HeaderMap::new(),
                 params,
                 HashMap::new(),
+                bytes::Bytes::new(),
             );
 
             // 2. 提取参数
@@ -217,6 +220,7 @@ fn bench_concurrent_style_processing(c: &mut Criterion) {
                     HeaderMap::new(),
                     HashMap::new(),
                     HashMap::new(),
+                    bytes::Bytes::new(),
                 );
                 black_box(get_path(&event));
             }
@@ -241,6 +245,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
             HeaderMap::new(),
             params,
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         b.iter(|| {
@@ -258,6 +263,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         b.iter(|| black_box(get_param_required(&event, "id")));
@@ -272,6 +278,7 @@ fn bench_error_handling_paths(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         b.iter(|| {

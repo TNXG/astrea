@@ -69,7 +69,7 @@ pub fn build_router_expr(
                 {
                     let __routes = ::astrea::axum::Router::new()
                         #(#route_regs)*;
-                    let __scope_mw = #mw_mod::middleware();
+                    let __scope_mw = #mw_mod::middleware::<S>();
                     __scope_mw.apply(__routes)
                 }
             }
@@ -104,7 +104,7 @@ pub fn build_router_expr(
                         }
                     )*
 
-                    let __scope_mw = #mw_mod::middleware();
+                    let __scope_mw = #mw_mod::middleware::<S>();
                     __scope_mw.apply(__extend).merge(__override_group)
                 }
             }

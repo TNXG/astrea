@@ -32,6 +32,7 @@ fn create_test_event(path: &str, with_params: bool, with_query: bool) -> Event {
         HeaderMap::new(),
         params,
         query,
+        bytes::Bytes::new(),
     )
 }
 
@@ -48,6 +49,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 HeaderMap::new(),
                 HashMap::new(),
                 HashMap::new(),
+                bytes::Bytes::new(),
             ))
         });
     });
@@ -65,6 +67,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 HeaderMap::new(),
                 params,
                 HashMap::new(),
+                bytes::Bytes::new(),
             ))
         });
     });
@@ -83,6 +86,7 @@ fn bench_event_creation(c: &mut Criterion) {
                 HeaderMap::new(),
                 HashMap::new(),
                 query,
+                bytes::Bytes::new(),
             ))
         });
     });
@@ -165,6 +169,7 @@ fn bench_param_access(c: &mut Criterion) {
                     HeaderMap::new(),
                     params.clone(),
                     HashMap::new(),
+                    bytes::Bytes::new(),
                 );
                 b.iter(|| {
                     for key in event.params().keys() {
@@ -190,6 +195,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
         b.iter(|| black_box(event.query()));
     });
@@ -202,6 +208,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
         b.iter(|| black_box(event.query()));
     });
@@ -214,6 +221,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
         b.iter(|| black_box(event.query()));
     });
@@ -227,6 +235,7 @@ fn bench_query_parsing(c: &mut Criterion) {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
         // 第一次调用触发解析
         let _ = event.query();
@@ -252,6 +261,7 @@ fn bench_query_parsing(c: &mut Criterion) {
                     HeaderMap::new(),
                     HashMap::new(),
                     HashMap::new(),
+                    bytes::Bytes::new(),
                 );
                 b.iter(|| black_box(event.query()));
             },
@@ -275,6 +285,7 @@ fn bench_json_parsing(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(serde::Deserialize)]
@@ -309,6 +320,7 @@ fn bench_text_parsing(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     group.bench_function("valid_utf8", |b| {
@@ -339,6 +351,7 @@ fn bench_state_access(c: &mut Criterion) {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
     event.state = Some(std::sync::Arc::new(state));
 

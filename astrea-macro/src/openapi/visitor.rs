@@ -110,8 +110,8 @@ impl<'ast> Visit<'ast> for HandlerVisitor {
     }
 
     fn visit_local(&mut self, node: &'ast Local) {
-        // Detect: let body: T = get_body(&event, &bytes)?;
-        // 检测: let body: T = get_body(&event, &bytes)?;
+        // Detect: let body: T = get_body(&event)?;
+        // 检测: let body: T = get_body(&event)?;
         if let Some(init) = &node.init {
             if is_get_body_call(&init.expr) {
                 if let syn::Pat::Type(pat_type) = &node.pat {

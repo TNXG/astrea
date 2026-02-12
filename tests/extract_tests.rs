@@ -23,6 +23,7 @@ fn test_get_param_exists() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_param(&event, "id"), Some("123"));
@@ -38,6 +39,7 @@ fn test_get_param_not_exists() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_param(&event, "id"), None);
@@ -56,6 +58,7 @@ fn test_get_param_required_exists() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = get_param_required(&event, "user_id");
@@ -72,6 +75,7 @@ fn test_get_param_required_not_exists() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = get_param_required(&event, "missing_param");
@@ -104,6 +108,7 @@ fn test_get_query() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let query_map = get_query(&event);
@@ -121,6 +126,7 @@ fn test_get_query_empty() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let query_map = get_query(&event);
@@ -139,6 +145,7 @@ fn test_get_query_param_exists() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let result = get_query_param(&event, "filter");
@@ -154,6 +161,7 @@ fn test_get_query_param_not_exists() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = get_query_param(&event, "missing");
@@ -172,6 +180,7 @@ fn test_get_query_param_required_exists() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let result = get_query_param_required(&event, "token");
@@ -188,6 +197,7 @@ fn test_get_query_param_required_not_exists() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = get_query_param_required(&event, "token");
@@ -208,15 +218,6 @@ fn test_get_query_param_required_not_exists() {
 
 #[test]
 fn test_get_body_json() {
-    let event = Event::new(
-        Method::POST,
-        "/api/users".to_string(),
-        "/api/users".parse().unwrap(),
-        HeaderMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-    );
-
     #[derive(serde::Deserialize, PartialEq, Debug)]
     struct User {
         name: String,
@@ -224,7 +225,17 @@ fn test_get_body_json() {
     }
 
     let json_bytes = br#"{"name":"Bob","email":"bob@example.com"}"#;
-    let result = get_body::<User>(&event, json_bytes);
+    let event = Event::new(
+        Method::POST,
+        "/api/users".to_string(),
+        "/api/users".parse().unwrap(),
+        HeaderMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        bytes::Bytes::from_static(json_bytes),
+    );
+
+    let result = get_body::<User>(&event);
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -241,6 +252,7 @@ fn test_get_body_json_invalid() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from_static(b"{invalid json}"),
     );
 
     #[derive(serde::Deserialize)]
@@ -250,14 +262,14 @@ fn test_get_body_json_invalid() {
         email: String,
     }
 
-    let invalid_json = b"{invalid json}";
-    let result = get_body::<User>(&event, invalid_json);
+    let result = get_body::<User>(&event);
 
     assert!(result.is_err());
 }
 
 #[test]
 fn test_get_body_bytes() {
+    let data = b"Binary data \x00\x01\x02\xFF";
     let event = Event::new(
         Method::POST,
         "/upload".to_string(),
@@ -265,10 +277,10 @@ fn test_get_body_bytes() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from_static(data),
     );
 
-    let data = b"Binary data \x00\x01\x02\xFF";
-    let result = get_body_bytes(&event, data);
+    let result = get_body_bytes(&event);
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), data);
@@ -276,6 +288,7 @@ fn test_get_body_bytes() {
 
 #[test]
 fn test_get_body_text() {
+    let text_data = b"Hello, this is a text message!";
     let event = Event::new(
         Method::POST,
         "/api/message".to_string(),
@@ -283,10 +296,10 @@ fn test_get_body_text() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from_static(text_data),
     );
 
-    let text_data = b"Hello, this is a text message!";
-    let result = get_body_text(&event, text_data);
+    let result = get_body_text(&event);
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "Hello, this is a text message!");
@@ -294,6 +307,7 @@ fn test_get_body_text() {
 
 #[test]
 fn test_get_body_text_invalid_utf8() {
+    let invalid_utf8 = &[0xFF, 0xFE, 0xFD];
     let event = Event::new(
         Method::POST,
         "/api/message".to_string(),
@@ -301,10 +315,10 @@ fn test_get_body_text_invalid_utf8() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::copy_from_slice(invalid_utf8),
     );
 
-    let invalid_utf8 = &[0xFF, 0xFE, 0xFD];
-    let result = get_body_text(&event, invalid_utf8);
+    let result = get_body_text(&event);
 
     assert!(result.is_err());
     match result {
@@ -333,6 +347,7 @@ fn test_get_header_exists() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_header(&event, "content-type"), Some("application/json"));
@@ -349,6 +364,7 @@ fn test_get_header_not_exists() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_header(&event, "missing-header"), None);
@@ -366,6 +382,7 @@ fn test_get_header_case_insensitive() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     // HTTP 头名是不区分大小写的
@@ -387,6 +404,7 @@ fn test_get_headers() {
         headers.clone(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let retrieved_headers = get_headers(&event);
@@ -416,6 +434,7 @@ fn test_get_state_success() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     event.state = Some(Arc::new(db.clone()));
@@ -434,6 +453,7 @@ fn test_get_state_not_found() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     #[derive(Clone)]
@@ -475,6 +495,7 @@ fn test_get_method() {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         assert_eq!(get_method(&event), &method);
@@ -493,6 +514,7 @@ fn test_get_path() {
             HeaderMap::new(),
             HashMap::new(),
             HashMap::new(),
+            bytes::Bytes::new(),
         );
 
         assert_eq!(get_path(&event), path);
@@ -511,6 +533,7 @@ fn test_get_uri() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_uri(&event), &uri);
@@ -550,6 +573,7 @@ fn test_extract_combined_scenario() {
         headers,
         params,
         query,
+        bytes::Bytes::new(),
     );
 
     // 验证所有提取功能
@@ -575,6 +599,12 @@ fn test_extract_post_request_with_body() {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", HeaderValue::from_static("application/json"));
 
+    let json_data = br#"{
+        "title": "Rust Web Development",
+        "content": "Building web apps with Rust is awesome!",
+        "tags": ["rust", "web", "backend"]
+    }"#;
+
     let event = Event::new(
         Method::POST,
         "/api/posts".to_string(),
@@ -582,6 +612,7 @@ fn test_extract_post_request_with_body() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::from_static(json_data),
     );
 
     #[derive(serde::Deserialize, Debug, PartialEq)]
@@ -591,13 +622,7 @@ fn test_extract_post_request_with_body() {
         tags: Vec<String>,
     }
 
-    let json_data = br#"{
-        "title": "Rust Web Development",
-        "content": "Building web apps with Rust is awesome!",
-        "tags": ["rust", "web", "backend"]
-    }"#;
-
-    let post: CreatePost = get_body(&event, json_data).unwrap();
+    let post: CreatePost = get_body(&event).unwrap();
     assert_eq!(post.title, "Rust Web Development");
     assert_eq!(post.content, "Building web apps with Rust is awesome!");
     assert_eq!(post.tags, vec!["rust", "web", "backend"]);

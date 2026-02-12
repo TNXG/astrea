@@ -18,6 +18,7 @@ fn test_get_param() {
         axum::http::HeaderMap::new(),
         params,
         std::collections::HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_param(&event, "id"), Some("123"));
@@ -36,6 +37,7 @@ fn test_get_param_required() {
         axum::http::HeaderMap::new(),
         params,
         std::collections::HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     assert_eq!(get_param_required(&event, "id").unwrap(), "123");

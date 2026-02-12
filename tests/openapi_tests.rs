@@ -235,7 +235,7 @@ fn test_request_body_detection() {
         /// @response 409 Email already exists
         #[route]
         pub async fn create_user_handler(event: Event) -> Result<Response> {
-            let body: CreateUserRequest = get_body(&event, &__body_bytes)?;
+            let body: CreateUserRequest = get_body(&event)?;;
             json(json!({
                 "username": body.username,
                 "email": body.email,
@@ -383,7 +383,7 @@ fn test_complex_real_world_scenario() {
                 bio: Option<String>,
             }
 
-            let req: UpdateRequest = get_body(&event, &__body_bytes)?;
+            let req: UpdateRequest = get_body(&event)?;
 
             // Manually list fields that were provided in request
             let mut updated_fields = Vec::new();

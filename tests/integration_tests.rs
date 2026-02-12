@@ -32,6 +32,7 @@ async fn test_simple_handler_flow() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = handler(event).await;
@@ -72,6 +73,7 @@ async fn test_post_handler_with_json_body() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = create_user_handler(event).await;
@@ -109,6 +111,7 @@ async fn test_handler_with_query_params() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let result = search_handler(event).await;
@@ -150,6 +153,7 @@ async fn test_handler_with_headers() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = auth_handler(event).await;
@@ -163,6 +167,7 @@ async fn test_handler_with_headers() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result_no_auth = auth_handler(event_no_auth).await;
@@ -203,6 +208,7 @@ async fn test_handler_with_state() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     event.state = Some(Arc::new(state));
@@ -232,6 +238,7 @@ async fn test_handler_error_propagation() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = failing_handler(event).await;
@@ -323,6 +330,7 @@ async fn test_rest_api_list_resources() {
         HeaderMap::new(),
         HashMap::new(),
         query,
+        bytes::Bytes::new(),
     );
 
     let result = list_users(event).await;
@@ -357,6 +365,7 @@ async fn test_rest_api_get_single_resource() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = get_user(event).await;
@@ -373,6 +382,7 @@ async fn test_rest_api_get_single_resource() {
         HeaderMap::new(),
         params_not_found,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result_not_found = get_user(event_not_found).await;
@@ -403,6 +413,7 @@ async fn test_rest_api_delete_resource() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = delete_user(event).await;
@@ -420,6 +431,7 @@ async fn test_rest_api_delete_resource() {
         HeaderMap::new(),
         params_protected,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result_protected = delete_user(event_protected).await;
@@ -445,6 +457,7 @@ async fn test_handler_returning_html() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = html_handler(event).await;
@@ -474,6 +487,7 @@ async fn test_handler_returning_text() {
         HeaderMap::new(),
         params,
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = text_handler(event).await;
@@ -496,6 +510,7 @@ async fn test_handler_with_redirect() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = redirect_handler(event).await;
@@ -562,6 +577,7 @@ async fn test_complex_business_logic() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     event.state = Some(Arc::new(state));
@@ -611,6 +627,7 @@ async fn test_middleware_style_processing() {
         headers,
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = actual_handler(event).await;
@@ -634,6 +651,7 @@ async fn test_empty_response_body() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = handler(event).await;
@@ -654,6 +672,7 @@ async fn test_handler_with_custom_status_code() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = handler(event).await;
@@ -677,6 +696,7 @@ async fn test_handler_with_multiple_headers() {
         HeaderMap::new(),
         HashMap::new(),
         HashMap::new(),
+        bytes::Bytes::new(),
     );
 
     let result = handler(event).await;

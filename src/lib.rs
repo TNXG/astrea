@@ -98,6 +98,9 @@ pub use bytes;
 /// Re-export of `serde`
 /// / Re-export serde
 pub use serde;
+/// Re-export of `comfy-table` - used by route macros
+/// / Re-export comfy-table - 由路由宏使用
+pub use comfy_table;
 /// Re-export of `serde_json`
 /// / Re-export serde_json
 pub use serde_json;

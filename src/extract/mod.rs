@@ -34,7 +34,7 @@
 //! async fn handler(event: Event, bytes: Bytes) -> Result<Response> {
 //!     let id = get_param_required(&event, "id")?;
 //!     let search = get_query_param(&event, "q");
-//!     let body: MyData = get_body(&event, &bytes)?;
+//!     let body: MyData = get_body(&event)?;
 //!     json(json!({ "id", "search": search, "body": body }))
 //! }
 //! ```

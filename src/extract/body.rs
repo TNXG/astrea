@@ -34,10 +34,10 @@ use crate::{Event, error::Result};
 ///     email: String,
 /// }
 ///
-/// let body: CreateUserRequest = get_body(&event, &bytes)?;
+/// let body: CreateUserRequest = get_body(&event)?;
 /// ```
-pub fn get_body<T: serde::de::DeserializeOwned>(event: &Event, bytes: &[u8]) -> Result<T> {
-    event.parse_json(bytes)
+pub fn get_body<T: serde::de::DeserializeOwned>(event: &Event) -> Result<T> {
+    event.parse_json(&event.body)
 }
 
 /// Get raw request body bytes
@@ -54,11 +54,11 @@ pub fn get_body<T: serde::de::DeserializeOwned>(event: &Event, bytes: &[u8]) -> 
 /// # 示例
 ///
 /// ```rust,ignore
-/// let data = get_body_bytes(&event, &bytes)?;
+/// let data = get_body_bytes(&event)?;
 /// // Process raw bytes...
 /// ```
-pub fn get_body_bytes<'a>(_event: &'a Event, bytes: &'a [u8]) -> Result<&'a [u8]> {
-    Ok(bytes)
+pub fn get_body_bytes(event: &Event) -> Result<&[u8]> {
+    Ok(&event.body)
 }
 
 /// Get request body as text
@@ -82,8 +82,8 @@ pub fn get_body_bytes<'a>(_event: &'a Event, bytes: &'a [u8]) -> Result<&'a [u8]
 /// # 示例
 ///
 /// ```rust,ignore
-/// let text = get_body_text(&event, &bytes)?;
+/// let text = get_body_text(&event)?;
 /// ```
-pub fn get_body_text(event: &Event, bytes: &[u8]) -> Result<String> {
-    event.parse_text(bytes)
+pub fn get_body_text(event: &Event) -> Result<String> {
+    event.parse_text(&event.body)
 }
