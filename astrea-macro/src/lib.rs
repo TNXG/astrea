@@ -93,8 +93,8 @@ use proc_macro::TokenStream;
 /// - Automatically converts `Result<Response>` to Axum's response type
 ///   自动将 `Result<Response>` 转换为 Axum 的响应类型
 #[proc_macro_attribute]
-pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
-    route::impl_route(_args, input)
+pub fn route(args: TokenStream, input: TokenStream) -> TokenStream {
+    route::impl_route(args, input)
 }
 
 // ============================================================================

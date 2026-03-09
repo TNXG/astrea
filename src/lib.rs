@@ -82,6 +82,8 @@ pub mod middleware;
 pub mod openapi;
 pub mod response;
 pub mod router;
+pub mod sse;
+pub mod ws;
 
 // ============================================================================
 // Re-export dependencies - users don't need to depend on these crates directly
@@ -116,6 +118,9 @@ pub use tower_http;
 /// Re-export of `tracing`
 /// / Re-export tracing
 pub use tracing;
+/// Re-export of `tokio-stream` - used by SSE macro code
+/// / Re-export tokio-stream - 由 SSE 宏代码使用
+pub use tokio_stream;
 
 // Convenience re-export: axum::serve
 // 便捷 re-export: axum::serve

@@ -182,7 +182,51 @@ pub fn scan_and_build_scope(
         a.axum_path.cmp(&b.axum_path)
     });
 
+    // Conflict detection: method-less files (ANY/WS/SSE) conflict with
+    // method-specific files at the same path.
+    // 冲突检测：无方法文件（ANY/WS/SSE）与同路径的具体方法文件冲突。
+    check_route_conflicts(&scope.routes);
+
     scope
+}
+
+/// Check for conflicting routes within a scope
+///
+/// / 检查作用域内的路由冲突
+///
+/// A method-less file (ANY/WS/SSE) at a given path conflicts with any
+/// method-specific file at the same path, since the method-less file
+/// would handle those requests.
+///
+/// 在给定路径上的无方法文件（ANY/WS/SSE）与同路径的具体方法文件冲突，
+/// 因为无方法文件会处理这些请求。
+fn check_route_conflicts(routes: &[ScannedRoute]) {
+    use std::collections::HashMap;
+
+    // Group routes by their path
+    // 按路径分组路由
+    let mut by_path: HashMap<&str, Vec<&ScannedRoute>> = HashMap::new();
+    for route in routes {
+        by_path.entry(route.axum_path.as_str()).or_default().push(route);
+    }
+
+    for (path, group) in &by_path {
+        let has_special = group.iter().any(|r| matches!(r.method.as_str(), "ANY" | "WS" | "SSE"));
+        let has_method_specific = group.iter().any(|r| !matches!(r.method.as_str(), "ANY" | "WS" | "SSE"));
+
+        if has_special && has_method_specific {
+            let special = group.iter().find(|r| matches!(r.method.as_str(), "ANY" | "WS" | "SSE")).unwrap();
+            let specific = group.iter().find(|r| !matches!(r.method.as_str(), "ANY" | "WS" | "SSE")).unwrap();
+            panic!(
+                "astrea: route conflict at path `{}`\n  \
+                 method-less file: {}\n  \
+                 method-specific file: {}\n  \
+                 A method-less route file cannot coexist with method-specific \
+                 route files at the same path.",
+                path, special.file_path, specific.file_path,
+            );
+        }
+    }
 }
 
 /// Convert a directory name to a path component for route building
@@ -197,6 +241,127 @@ fn dir_name_to_path_part(name: &str) -> String {
         format!("[{}]", param)
     } else {
         name.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_route(method: &str, path: &str) -> ScannedRoute {
+        ScannedRoute {
+            method: method.to_string(),
+            axum_path: path.to_string(),
+            file_path: format!("{path}.rs"),
+            module_name: "test".to_string(),
+        }
+    }
+
+    // ── check_route_conflicts ─────────────────────────────────────────────────
+
+    #[test]
+    fn no_conflict_empty_routes() {
+        check_route_conflicts(&[]);
+    }
+
+    #[test]
+    fn no_conflict_single_get_route() {
+        check_route_conflicts(&[make_route("GET", "/users")]);
+    }
+
+    #[test]
+    fn no_conflict_single_any_route() {
+        check_route_conflicts(&[make_route("ANY", "/ws")]);
+    }
+
+    #[test]
+    fn no_conflict_single_ws_route() {
+        check_route_conflicts(&[make_route("WS", "/chat")]);
+    }
+
+    #[test]
+    fn no_conflict_single_sse_route() {
+        check_route_conflicts(&[make_route("SSE", "/events")]);
+    }
+
+    #[test]
+    fn no_conflict_different_paths() {
+        // ANY at /chat and GET at /users are different paths — no conflict
+        check_route_conflicts(&[
+            make_route("ANY", "/chat"),
+            make_route("GET", "/users"),
+        ]);
+    }
+
+    #[test]
+    fn no_conflict_get_post_same_path() {
+        // Two HTTP methods at same path is fine (not a special vs specific conflict)
+        check_route_conflicts(&[
+            make_route("GET", "/users"),
+            make_route("POST", "/users"),
+        ]);
+    }
+
+    #[test]
+    fn no_conflict_ws_and_sse_different_paths() {
+        check_route_conflicts(&[
+            make_route("WS", "/chat"),
+            make_route("SSE", "/events"),
+        ]);
+    }
+
+    #[test]
+    #[should_panic(expected = "route conflict")]
+    fn conflict_any_plus_get_same_path() {
+        check_route_conflicts(&[
+            make_route("ANY", "/users"),
+            make_route("GET", "/users"),
+        ]);
+    }
+
+    #[test]
+    #[should_panic(expected = "route conflict")]
+    fn conflict_ws_plus_post_same_path() {
+        check_route_conflicts(&[
+            make_route("WS", "/chat"),
+            make_route("POST", "/chat"),
+        ]);
+    }
+
+    #[test]
+    #[should_panic(expected = "route conflict")]
+    fn conflict_sse_plus_delete_same_path() {
+        check_route_conflicts(&[
+            make_route("SSE", "/events"),
+            make_route("DELETE", "/events"),
+        ]);
+    }
+
+    #[test]
+    #[should_panic(expected = "route conflict")]
+    fn conflict_any_plus_multiple_methods() {
+        check_route_conflicts(&[
+            make_route("ANY", "/api"),
+            make_route("GET", "/api"),
+            make_route("POST", "/api"),
+        ]);
+    }
+
+    // ── dir_name_to_path_part ─────────────────────────────────────────────────
+
+    #[test]
+    fn plain_segment() {
+        assert_eq!(dir_name_to_path_part("users"), "users");
+    }
+
+    #[test]
+    fn dynamic_segment_brackets() {
+        assert_eq!(dir_name_to_path_part("[id]"), "[id]");
+    }
+
+    #[test]
+    fn catch_all_segment() {
+        assert_eq!(dir_name_to_path_part("[...path]"), "[...path]");
     }
 }
 

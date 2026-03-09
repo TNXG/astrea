@@ -11,6 +11,7 @@
   <a href="https://crates.io/crates/astrea"><img src="https://img.shields.io/crates/v/astrea.svg" alt="crates.io" /></a>
   <a href="https://docs.rs/astrea"><img src="https://docs.rs/astrea/badge.svg" alt="docs.rs" /></a>
   <a href="https://github.com/TNXG/astrea/blob/main/LICENSE"><img src="https://img.shields.io/crates/l/astrea.svg" alt="MIT License" /></a>
+  <a href="https://deepwiki.com/TNXG/astrea"><img src="https://img.shields.io/badge/DeepWiki-Astrea-blue.svg" alt="DeepWiki" /></a>
 </p>
 
 <p align="center">
@@ -239,6 +240,47 @@ json(data)?
 
 ---
 
+## WebSockets & Server-Sent Events (SSE)
+
+Astrea supports WebSockets and SSE natively via route attributes. Simply use `#[route(ws)]` or `#[route(sse)]` instead of `#[route]`.
+
+### WebSockets (`#[route(ws)]`)
+
+```rust
+use astrea::prelude::*;
+use astrea::ws::{WebSocket, Message};
+
+#[route(ws)]
+pub async fn handler(event: Event, mut socket: WebSocket) {
+    // Receive and echo messages
+    while let Some(Ok(msg)) = socket.recv().await {
+        if let Message::Text(text) = msg {
+            let _ = socket.send(Message::from(format!("Echo: {}", text.as_str()))).await;
+        }
+    }
+}
+```
+
+### Server-Sent Events (`#[route(sse)]`)
+
+```rust
+use astrea::prelude::*;
+use astrea::sse::{SseSender, SseEvent};
+use std::time::Duration;
+
+#[route(sse)]
+pub async fn handler(event: Event, sender: SseSender) {
+    let _ = sender.send(
+        SseEvent::new()
+            .event("greeting")
+            .data("Hello from SSE!")
+            .retry(Duration::from_secs(5))
+    ).await;
+}
+```
+
+---
+
 ## Error Handling
 
 Return errors naturally — they become proper HTTP responses automatically:
@@ -408,6 +450,12 @@ Root middleware → all routes. API middleware → `/api/*` routes.
 | **Error handling** | Built-in JSON errors | DIY |
 | **Middleware** | File-based scoping | Manual nesting |
 | **OpenAPI** | Auto-generated | Manual or third-party |
+
+---
+
+## AI Agent Support
+
+Astrea provides a built-in guide for AI coding assistants. If you are using an AI agent (like Copilot, Cursor, or Claude) to help you build your application, point them to the [`agent.md`](./agent.md) file in the root of the repository. It contains framework-specific rules, architectural context, and coding conventions to ensure your AI assistant writes idiomatic Astrea code.
 
 ---
 

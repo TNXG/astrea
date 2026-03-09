@@ -39,19 +39,23 @@ pub fn generate_scope_code(
 
         // OpenAPI registration (only when openapi feature is enabled)
         // OpenAPI 注册（仅当启用 openapi feature 时）
+        // Skip WS/SSE/ANY routes — they don't generate OpenAPI metadata
+        // 跳过 WS/SSE/ANY 路由 — 它们不生成 OpenAPI 元数据
         #[cfg(feature = "openapi")]
         {
-            let method_str = &route.method;
-            let openapi_path = super::openapi::axum_path_to_openapi(&route.axum_path);
-            let op_id = &route.module_name;
-            openapi_regs.push(quote! {
-                ::astrea::openapi::register(
-                    #method_str,
-                    #openapi_path,
-                    #op_id,
-                    #mod_name::__openapi_meta(),
-                );
-            });
+            if !matches!(route.method.as_str(), "WS" | "SSE" | "ANY") {
+                let method_str = &route.method;
+                let openapi_path = super::openapi::axum_path_to_openapi(&route.axum_path);
+                let op_id = &route.module_name;
+                openapi_regs.push(quote! {
+                    ::astrea::openapi::register(
+                        #method_str,
+                        #openapi_path,
+                        #op_id,
+                        #mod_name::__openapi_meta(),
+                    );
+                });
+            }
         }
     }
 
@@ -75,10 +79,30 @@ pub fn generate_scope_code(
         .iter()
         .map(|r| {
             let axum_path = &r.axum_path;
-            let method_fn = Ident::new(&r.method.to_lowercase(), proc_macro2::Span::call_site());
             let mod_name = Ident::new(&r.module_name, proc_macro2::Span::call_site());
-            quote! {
-                .route(#axum_path, ::astrea::axum::routing::#method_fn(#mod_name::handler::<S>))
+            match r.method.as_str() {
+                // WS and SSE both register as GET (upgrade happens inside the handler)
+                // WS 和 SSE 都注册为 GET（升级在 handler 内部发生）
+                "WS" | "SSE" => {
+                    quote! {
+                        .route(#axum_path, ::astrea::axum::routing::get(#mod_name::handler::<S>))
+                    }
+                }
+                // ANY handles all HTTP methods
+                // ANY 处理所有 HTTP 方法
+                "ANY" => {
+                    quote! {
+                        .route(#axum_path, ::astrea::axum::routing::any(#mod_name::handler::<S>))
+                    }
+                }
+                // Standard HTTP methods
+                // 标准 HTTP 方法
+                _ => {
+                    let method_fn = Ident::new(&r.method.to_lowercase(), proc_macro2::Span::call_site());
+                    quote! {
+                        .route(#axum_path, ::astrea::axum::routing::#method_fn(#mod_name::handler::<S>))
+                    }
+                }
             }
         })
         .collect();

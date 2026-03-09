@@ -11,6 +11,7 @@
   <a href="https://crates.io/crates/astrea"><img src="https://img.shields.io/crates/v/astrea.svg" alt="crates.io" /></a>
   <a href="https://docs.rs/astrea"><img src="https://docs.rs/astrea/badge.svg" alt="docs.rs" /></a>
   <a href="https://github.com/TNXG/astrea/blob/main/LICENSE"><img src="https://img.shields.io/crates/l/astrea.svg" alt="MIT License" /></a>
+  <a href="https://deepwiki.com/TNXG/astrea"><img src="https://img.shields.io/badge/DeepWiki-Astrea-blue.svg" alt="DeepWiki" /></a>
 </p>
 
 <p align="center">
@@ -239,6 +240,47 @@ json(data)?
 
 ---
 
+## WebSockets & Server-Sent Events (SSE)
+
+Astrea 原生支持 WebSocket 和 SSE，只需使用 `#[route(ws)]` 或 `#[route(sse)]` 宏代替标准的 `#[route]`。
+
+### WebSockets (`#[route(ws)]`)
+
+```rust
+use astrea::prelude::*;
+use astrea::ws::{WebSocket, Message};
+
+#[route(ws)]
+pub async fn handler(event: Event, mut socket: WebSocket) {
+    // 接收并回显消息
+    while let Some(Ok(msg)) = socket.recv().await {
+        if let Message::Text(text) = msg {
+            let _ = socket.send(Message::from(format!("Echo: {}", text.as_str()))).await;
+        }
+    }
+}
+```
+
+### Server-Sent Events (`#[route(sse)]`)
+
+```rust
+use astrea::prelude::*;
+use astrea::sse::{SseSender, SseEvent};
+use std::time::Duration;
+
+#[route(sse)]
+pub async fn handler(event: Event, sender: SseSender) {
+    let _ = sender.send(
+        SseEvent::new()
+            .event("greeting")
+            .data("来自 SSE 的问候！")
+            .retry(Duration::from_secs(5))
+    ).await;
+}
+```
+
+---
+
 ## 错误处理
 
 自然地返回错误——它们会自动变成合适的 HTTP 响应：
@@ -408,6 +450,12 @@ my-api/
 | **错误处理** | 内置 JSON 错误响应 | 自己实现 |
 | **中间件** | 基于文件的作用域 | 手动嵌套 |
 | **OpenAPI** | 自动生成 | 手动写或用第三方库 |
+
+---
+
+## AI Agent 支持
+
+Astrea 为 AI 编程助手提供了内置指南。如果您正在使用 AI Agent（如 Copilot、Cursor、Claude 等）来辅助开发应用，请让它们阅读项目根目录下的 [`agent.md`](./agent.md) 文件。该文件包含了框架专属的规则、架构上下文以及代码规范，可确保您的 AI 助手编写出符合 Astrea 习惯的最佳实践代码。
 
 ---
 

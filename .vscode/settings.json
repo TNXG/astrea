@@ -1,0 +1,6 @@
+{
+  "rust-analyzer.procMacro.enable": false,
+  "rust-analyzer.cargo.buildScripts.enable": false,
+  "rust-analyzer.cargo.features": [],
+  "rust-analyzer.checkOnSave": false
+}
