@@ -268,7 +268,12 @@ pub fn impl_generate_routes(input: TokenStream) -> TokenStream {
             // OpenAPI TUI (after registration)
             #openapi_tui_section
 
-            #router_expr
+            // Merge extend and override groups into final router
+            // 将叠加组和覆盖组合并为最终路由器
+            {
+                let (__r_extend, __r_override) = #router_expr;
+                __r_extend.merge(__r_override)
+            }
         }
     };
     expanded.into()

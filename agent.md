@@ -486,8 +486,69 @@ pub fn middleware<S: Clone + Send + Sync + 'static>() -> Middleware<S> {
 
 ### Middleware Modes
 
-- **`Middleware::new()`** - Inherit parent middleware layers (extend mode)
-- **`Middleware::override_parent()`** - Reset middleware stack and start fresh (replace mode)
+#### Extend Mode (Default)
+
+```rust
+Middleware::new()  // Inherit all ancestor middleware layers
+```
+
+- Child routes **inherit** all parent middleware
+- New middleware is **added on top** of ancestor layers
+- Middleware chain: Ancestor A → Ancestor B → Parent C → Child D
+- Use this for most cases to build up middleware protection
+
+#### Override Mode
+
+```rust
+Middleware::override_parent()  // Clear ALL ancestor middleware
+```
+
+- Child routes **discard** all ancestor middleware layers
+- Only the override scope's own middleware applies
+- **Important:** This clears all ancestor layers, not just the immediate parent
+- Middleware chain: Child D only (Ancestor A, B, C are removed)
+- Use this for public routes that shouldn't have auth/restrictions
+
+### Understanding Middleware Inheritance Hierarchy
+
+The key insight: **`override_parent()` clears the entire ancestor chain, not individual levels.**
+
+**Example Project Structure:**
+
+```
+routes/
+├── _middleware.rs                    # Middleware A: [CORS, Trace]
+├── index.get.rs                      # Inherits: A only
+├── api/
+│   ├── _middleware.rs               # Middleware B: [Auth, Token Check]
+│   ├── users.get.rs                 # Inherits: A → B
+│   ├── posts.get.rs                 # Inherits: A → B
+│   └── public/
+│       ├── _middleware.rs           # Middleware C (Override mode): [Rate Limit]
+│       ├── login.post.rs            # Inherits: C only (A and B cleared!)
+│       └── signup.post.rs           # Inherits: C only (A and B cleared!)
+```
+
+**Middleware applied to each route:**
+- `GET /` → Middleware A
+- `GET /api/users` → Middleware A + Middleware B
+- `GET /api/posts` → Middleware A + Middleware B
+- `POST /api/public/login` → **Middleware C only** (Auth from B is removed!)
+- `POST /api/public/signup` → **Middleware C only** (Auth from B is removed!)
+
+### When to Use Each Mode
+
+**Use `Middleware::new()` (Extend):**
+- Building REST API with increasing security levels
+- Adding request logging/tracing at each level
+- Implementing role-based middleware that composes upward
+
+**Use `Middleware::override_parent()` (Override):**
+- Public authentication endpoints (login, signup, forgot-password)
+- Health check endpoints that bypass all checks
+- Public API documentation endpoints
+- Webhook endpoints that use custom authentication
+- Static file serving that shouldn't go through auth
 
 ### Common Middleware Patterns
 

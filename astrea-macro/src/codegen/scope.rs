@@ -123,11 +123,17 @@ pub fn generate_scope_code(
 
         child_blocks.push(quote! {
             {
-                let __inner = #child_router_expr;
-                let __mw = #child_mw_mod::middleware::<S>();
-                let __mode = __mw.mode;
-                let __built = __mw.apply(__inner);
-                (__mode, __built)
+                let (__child_wrapped, __child_override) = #child_router_expr;
+                let __mode = #child_mw_mod::middleware::<S>().mode;
+                if __mode == ::astrea::middleware::MiddlewareMode::Override {
+                    // Override: everything from this child bypasses all ancestor middleware
+                    // 覆盖：此子级的所有路由绕过所有祖先中间件
+                    (::astrea::axum::Router::new(), __child_wrapped.merge(__child_override))
+                } else {
+                    // Extend: preserve the extend/override split for further propagation
+                    // 叠加：保留叠加/覆盖拆分，继续向上透传
+                    (__child_wrapped, __child_override)
+                }
             }
         });
     }
